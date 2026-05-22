@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Catálogos - SP Comercial</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f5f5f7; color: #333; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        header { width: 100%; max-width: 800px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        
+        /* Vitrine organizada em formato de Grade/Grid Responsiva */
+        .vitrine { width: 100%; max-width: 800px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        
+        .card { background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; text-align: center; padding-bottom: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+        .img-box { width: 100%; height: 300px; background: #eaeaea; }
+        .img-box img { width: 100%; height: 100%; object-fit: contain; }
+        .info { padding: 20px; text-align: left; flex-grow: 1; }
+        .preco { font-size: 1.8rem; font-weight: 800; color: #c0392b; margin: 10px 0; }
+        .btn-whats { display: block; background: #25d366; color: #fff; text-decoration: none; text-align: center; padding: 12px; border-radius: 12px; font-weight: bold; margin: 0 20px; transition: background 0.2s; }
+        .btn-whats:hover { background: #1ebd59; }
+        
+        .status-footer { width: 100%; max-width: 800px; text-align: center; margin-top: 30px; font-size: 0.9rem; color: #666; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <span style="font-weight: bold; font-size: 1.2rem; color: #0f172a;" id="nomeLoja">SP Comercial 🏢</span>
+        <span style="background: #e8f5e9; color: #2e7d32; padding: 5px 10px; border-radius: 15px; font-size: 0.85rem;" id="tagVendedor">Atendimento</span>
+    </header>
+
+    <div class="vitrine" id="containerProdutos">
+        <p style="grid-column: 1/-1; text-align: center; color: #666; padding: 4px;">Carregando a vitrine da loja...</p>
+    </div>
+
+    <div class="status-footer" id="statusLayout">Layout configurado no banco: CLASSICO</div>
+
+    <script>
+        const SUPABASE_URL = "https://xxxsxsernmaltunwyfaq.supabase.co";
+        const CHAVE_BASE = "sb_publishable_sQNMnxWafcK5iF6CCXFFXg_lhx2nTQ"; 
+
+        const params = new URLSearchParams(window.location.search);
+        const refVendedor = params.get('ref') || 'geral';
+
+        async function tentarConexao(chaveTeste) {
+            const client = window.supabase.createClient(SUPABASE_URL, chaveTeste);
+            const { data, error } = await client.from('produtos').select('*');
+            if (error && error.message.includes("Invalid API key")) {
+                return { sucesso: false };
+            }
+            return { sucesso: true, data: data };
+        }
+
+        async function inicializarCatalogo() {
+            try {
+                let conexao = await tentarConexao(CHAVE_BASE);
+                let flagChave = CHAVE_BASE;
+
+                // Tratamento automático da nossa chave com hífen final
+                if (!conexao.sucesso) {
+                    const chaveComHifen = CHAVE_BASE + "-";
+                    const conexaoHifen = await tentarConexao(chaveComHifen);
+                    if (conexaoHifen.sucesso) {
+                        conexao = conexaoHifen;
+                        flagChave = chaveComHifen;
+                    } else {
+                        document.getElementById('containerProdutos').innerHTML = "<p style='color:red;'>Erro: Chave de conexão inválida.</p>";
+                        return;
+                    }
+                }
+
+                const supabaseClient = window.supabase.createClient(SUPABASE_URL, flagChave);
+
+                // Configurações fallback padrão do sistema
+                let whatsNumero = "5512997301639"; 
+                let nomeVendedor = "Central de Vendas";
+
+                // Tenta buscar o vendedor
+                try {
+                    const { data: vendedor } = await supabaseClient
+                        .from('vendedores')
+                        .select('*')
+                        .eq('codigo_ref', refVendedor.toLowerCase())
+                        .single();
+                    
+                    if (vendedor) {
+                        nomeVendedor = vendedor.nome_vendedor;
+                        whatsNumero = vendedor.whatsapp_numero;
+                        document.getElementById('tagVendedor').innerText = `Vendedor: ${nomeVendedor}`;
+                    } else {
+                        document.getElementById('tagVendedor').innerText = `Atendimento: ${nomeVendedor}`;
+                    }
+                } catch (e) {
+                    document.getElementById('tagVendedor').innerText = `Atendimento: ${nomeVendedor}`;
+                }
+
+                // Carrega a lista completa de produtos
+                const produtos = conexao.data;
+                const container = document.getElementById('containerProdutos');
+                container.innerHTML = ""; 
+
+                if (produtos && produtos.length > 0) {
+                    produtos.forEach(prod => {
+                        const msg = encodeURIComponent(`Olá ${nomeVendedor}, estou no catálogo da SP Comercial e gostaria de mais informações sobre o produto: "${prod.nome}"`);
+                        const linkWhats = `https://api.whatsapp.com/send?phone=${whatsNumero}&text=${msg}`;
+
+                        // === 🛠️ TRAVA 1: TRATAMENTO E FORMATAÇÃO DO PREÇO ===
+                        let precoFormatado = prod.preco || '0,00';
+                        // Se o preço não contiver o símbolo "R$", formata ele como moeda padrão
+                        if (!precoFormatado.toUpperCase().includes('R$')) {
+                            // Se for apenas o número limpo (ex: 20000), adiciona o R$ e a unidade /m²
+                            precoFormatado = `R$ ${precoFormatado}/m²`;
+                        }
+
+                        // === 🛠️ TRAVA 2: TRATAMENTO DO NULL NA DESCRIÇÃO ===
+                        // Se o campo for null, undefined ou string vazia, assume o texto padrão da loja
+                        let descricaoTratada = prod.descricao;
+                        if (!descricaoTratada || descricaoTratada === "NULL" || descricaoTratada === "null") {
+                            descricaoTratada = "Disponível para retirada ou entrega";
+                        }
+
+                        const cardHtml = `
+                            <div class="card">
+                                <div class="img-box">
+                                    <img src="${prod.imagem_url || 'https://via.placeholder.com/300'}" alt="${prod.nome || 'Produto'}">
+                                </div>
+                                <div class="info">
+                                    <small style="text-transform: uppercase; color: #888; font-weight: bold;">${prod.marca || 'Geral'}</small>
+                                    <h2 style="font-size: 1.3rem; margin-top: 5px; min-height: 50px;">${prod.nome || 'Sem nome informado'}</h2>
+                                    <div class="preco">${precoFormatado}</div>
+                                    <p style="color: #666; font-size: 0.95rem;">${descricaoTratada}</p>
+                                </div>
+                                <a href="${linkWhats}" target="_blank" class="btn-whats">Chamar no WhatsApp 💬</a>
+                            </div>
+                        `;
+                        container.innerHTML += cardHtml;
+                    });
+                } else {
+                    container.innerHTML = "<p>Nenhum produto encontrado para a SP Comercial.</p>";
+                }
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('containerProdutos').innerHTML = `<p style='color:red;'>Erro ao processar catálogo.</p>`;
+            }
+        }
+
+        inicializarCatalogo();
+    </script>
+</body>
+</html>

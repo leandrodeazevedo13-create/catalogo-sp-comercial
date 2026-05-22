@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Administrativo - SP Comercial</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #020617; 
+            color: #f8fafc; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Efeito de iluminação de fundo */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: #deff9a;
+            filter: blur(150px);
+            opacity: 0.1;
+            top: 10%;
+            left: 10%;
+            z-index: 0;
+        }
+
+        .login-card {
+            background: #0f172a;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #1e293b;
+            z-index: 1;
+        }
+
+        .login-card h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .login-card h1 span { color: #deff9a; }
+
+        .login-card p {
+            color: #94a3b8;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        .form-group { margin-bottom: 20px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: #deff9a;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            background: #1e293b;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus { border-color: #deff9a; }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            background: #deff9a;
+            color: #000;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover { background: #c5f57a; transform: translateY(-2px); }
+
+        .error-msg {
+            background: #450a0a;
+            color: #f87171;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+            border: 1px solid #7f1d1d;
+        }
+
+        .footer-link {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .footer-link a { color: #deff9a; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h1>SP <span>Comercial</span></h1>
+        <p>Painel de Controle Administrativo</p>
+
+        <div class="error-msg" id="loginError">Usuário ou senha inválidos.</div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label>E-MAIL</label>
+                <input type="email" id="email" placeholder="seu@email.com" required>
+            </div>
+            <div class="form-group">
+                <label>SENHA</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-login" id="btnLogin">Entrar no Sistema</button>
+        </form>
+
+        <div class="footer-link">
+            Esqueceu a senha? <a href="#">Contatar Suporte</a>
+        </div>
+    </div>
+
+    <script>
+        // Configurações do Supabase com nomes totalmente novos para evitar conflito
+        const CONFIG_URL_ADMIN = "https://xxxsxsernmaltunwyfaq.supabase.co";
+        const CONFIG_KEY_ADMIN = "sb_publishable_sQNMnxWafcK5iF6CCXFFXg_lhx2nTQ-"; 
+
+        // Criação do client isolado da tela de login
+        const supabaseAdminApp = window.supabase.createClient(CONFIG_URL_ADMIN, CONFIG_KEY_ADMIN);
+
+        const loginForm = document.getElementById('loginForm');
+        const loginError = document.getElementById('loginError');
+        const btnLogin = document.getElementById('btnLogin');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // UI Feedback
+            loginError.style.display = 'none';
+            btnLogin.innerText = "Autenticando...";
+            btnLogin.disabled = true;
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                // Autenticação direta no Supabase Auth
+                const { data, error } = await supabaseAdminApp.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data.user) {
+                    // Redirecionamento seguro pós-login
+                    window.location.href = "admin-dashboard.html";
+                }
+
+            } catch (error) {
+                console.error("Erro de login:", error.message);
+                loginError.innerText = "Falha no acesso: " + error.message;
+                loginError.style.display = 'block';
+                btnLogin.innerText = "Entrar no Sistema";
+                btnLogin.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

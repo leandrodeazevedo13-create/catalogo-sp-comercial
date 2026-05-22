@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo SaaS Dinâmico - Supabase</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f5f5f7; color: #333; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        header { width: 100%; max-width: 500px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .card { width: 100%; max-width: 500px; background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; text-align: center; padding-bottom: 20px; position: relative; }
+        .img-box { width: 100%; height: 350px; background: #eaeaea; }
+        .img-box img { width: 100%; height: 100%; object-fit: contain; }
+        .info { padding: 20px; text-align: left; }
+        .preco { font-size: 2rem; font-weight: 800; color: #c0392b; margin: 10px 0; }
+        .btn-whats { display: block; background: #25d366; color: #fff; text-decoration: none; text-align: center; padding: 15px; border-radius: 12px; font-weight: bold; margin: 0 20px; }
+        .status { margin-top: 15px; font-size: 0.9rem; color: #666; }
+        /* Alerta de erro visível na tela para facilitar */
+        #debug-alert { display: none; width: 100%; max-width: 500px; background: #fde8e8; border: 1px solid #f8b4b4; color: #9b1c1c; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; text-align: left; }
+    </style>
+</head>
+<body>
+
+    <div id="debug-alert"></div>
+
+    <header>
+        <span style="font-weight: bold;" id="nomeLoja">Carregando loja...</span>
+        <span style="background: #e8f5e9; color: #2e7d32; padding: 5px 10px; border-radius: 15px; font-size: 0.85rem;" id="tagVendedor">Atendimento</span>
+    </header>
+
+    <div class="card">
+        <div class="img-box">
+            <img id="prodImg" src="" alt="Produto">
+        </div>
+        <div class="info">
+            <small id="prodMarca" style="text-transform: uppercase; color: #888; font-weight: bold;"></small>
+            <h1 id="prodTitulo" style="font-size: 1.4rem; margin-top: 5px;">Buscando produto do banco...</h1>
+            <div class="preco" id="prodPreco">R$ 0,00</div>
+            <p id="prodDesc" style="color: #666; font-size: 0.95rem;"></p>
+        </div>
+        <a href="#" target="_blank" class="btn-whats" id="btnWhats">Chamar no WhatsApp 💬</a>
+        <div class="status" id="statusLayout">Layout configurado no banco: -</div>
+    </div>
+
+    <script>
+        // 1. CONFIGURAÇÃO DE CONEXÃO COM O SEU SUPABASE
+        const SUPABASE_URL = "https://xxxsxsernmaltunwyfaq.supabase.co";
+        
+        // Chave enviada por você
+        const CHAVE_BASE = "sb_publishable_sQNMnxWafcK5iF6CCXFFXg_lhx2nTQ"; 
+
+        // 2. CAPTURA DO VENDEDOR VIA URL QUERY (?ref=joao)
+        const params = new URLSearchParams(window.location.search);
+        const refVendedor = params.get('ref') || 'geral';
+
+        // Função auxiliar para mostrar o erro direto na tela sem precisar do F12
+        function mostrarErroNaTela(msg, dica) {
+            const box = document.getElementById('debug-alert');
+            box.style.display = 'block';
+            box.innerHTML = `<strong>⚠️ Erro de Conexão:</strong> ${msg}<br><br><small>💡 <strong>Dica do sistema:</strong> ${dica}</small>`;
+        }
+
+        async function tentarConexao(chaveTeste) {
+            const client = window.supabase.createClient(SUPABASE_URL, chaveTeste);
+            // Faz um teste rápido tentando ler a tabela
+            const { data, error } = await client.from('loja_config').select('*').single();
+            if (error && error.message.includes("Invalid API key")) {
+                return { sucesso: false, erro: error.message };
+            }
+            return { sucesso: true, client: client, data: data };
+        }
+
+        async function inicializarCatalogo() {
+            try {
+                let conexao = await tentarConexao(CHAVE_BASE);
+                let chaveFinalUsada = CHAVE_BASE;
+
+                // Se falhar com a chave normal, testa automaticamente adicionando o hífen (-) no final!
+                if (!conexao.sucesso) {
+                    console.log("Tentando variação com hífen no final...");
+                    const chaveComHifen = CHAVE_BASE + "-";
+                    const conexaoHifen = await tentarConexao(chaveComHifen);
+                    
+                    if (conexaoHifen.sucesso) {
+                        conexao = conexaoHifen;
+                        chaveFinalUsada = chaveComHifen;
+                    }
+                }
+
+                // Se mesmo assim falhar, avisa na tela o erro de chave
+                if (!conexao.sucesso) {
+                    mostrarErroNaTela(
+                        "Chave de API Inválida (Invalid API key).", 
+                        "Vá no painel do Supabase, clique no botão <strong>'Copy'</strong> oficial ao lado da chave e cole novamente aqui. Não tente selecionar arrastando o mouse para não faltar nenhum pedaço."
+                    );
+                    return;
+                }
+
+                // Se chegou aqui, a conexão funcionou! Pega o cliente que deu certo
+                const supabaseClient = window.supabase.createClient(SUPABASE_URL, chaveFinalUsada);
+
+                // Carrega os dados da loja recebidos no teste
+                const config = conexao.data;
+                if (config) {
+                    document.getElementById('nomeLoja').innerText = config.nome_loja;
+                    document.getElementById('statusLayout').innerText = `Layout configurado no banco: ${config.layout_estilo.toUpperCase()}`;
+                }
+
+                // Busca as informações do vendedor
+                const { data: vendedor } = await supabaseClient
+                    .from('vendedores')
+                    .select('*')
+                    .eq('codigo_ref', refVendedor.toLowerCase())
+                    .single();
+                
+                let whatsNumero = "5512777777777"; 
+                let nomeVendedor = "Atendimento Geral";
+
+                if (vendedor) {
+                    nomeVendedor = vendedor.nome_vendedor;
+                    whatsNumero = vendedor.whatsapp_numero;
+                    document.getElementById('tagVendedor').innerText = `Vendedor: ${nomeVendedor}`;
+                }
+
+                // Busca os produtos cadastrados
+                const { data: produtos, error: prodError } = await supabaseClient
+                    .from('produtos')
+                    .select('*');
+
+                if (prodError) throw prodError;
+                
+                if (produtos && produtos.length > 0) {
+                    const prod = produtos[0]; 
+                    
+                    document.getElementById('prodImg').src = prod.imagem_url;
+                    document.getElementById('prodMarca').innerText = prod.marca;
+                    document.getElementById('prodTitulo').innerText = prod.nome;
+                    document.getElementById('prodPreco').innerText = prod.preco;
+                    document.getElementById('prodDesc').innerText = prod.descricao;
+
+                    const msg = encodeURIComponent(`Olá ${nomeVendedor}, vi o produto "${prod.nome}" no catálogo por ${prod.preco} e gostaria de encomendar!`);
+                    document.getElementById('btnWhats').href = `https://api.whatsapp.com/send?phone=${whatsNumero}&text=${msg}`;
+                }
+
+            } catch (error) {
+                console.error(error);
+                mostrarErroNaTela(error.message, "Verifique se o seu banco de dados no Supabase não está pausado ou offline.");
+            }
+        }
+
+        // Inicializa o catálogo
+        inicializarCatalogo();
+    </script>
+</body>
+</html>

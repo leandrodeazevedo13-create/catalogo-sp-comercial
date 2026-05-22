@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo por Categorias - SP Comercial</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #020617; color: #f8fafc; min-height: 100vh; scroll-behavior: smooth; }
+
+        /* Navbar */
+        header {
+            background: rgba(15, 23, 42, 0.9);
+            border-bottom: 1px solid #1e293b;
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(8px);
+        }
+        .header-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo h1 { font-size: 1.4rem; color: #f8fafc; }
+        .logo h1 span { color: #deff9a; }
+        .contact-top { color: #94a3b8; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+
+        /* Container Principal */
+        main { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+
+        /* Banner */
+        .banner { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; padding: 40px; border-radius: 24px; margin-bottom: 45px; text-align: center; }
+        .banner h2 { font-size: 2rem; margin-bottom: 10px; color: #fff; }
+        .banner p { color: #94a3b8; font-size: 1.1rem; }
+
+        /* Títulos das Seções */
+        .section-title { font-size: 1.5rem; color: #fff; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .section-title span { color: #deff9a; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Grid de Categorias */
+        .categories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; margin-bottom: 60px; }
+        
+        .category-card {
+            background: #0f172a; border: 1px solid #1e293b; border-radius: 20px; overflow: hidden;
+            cursor: pointer; transition: all 0.3s ease; position: relative; height: 200px;
+            display: flex; align-items: flex-end;
+        }
+        .category-card:hover { transform: translateY(-5px); border-color: #deff9a; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+        
+        .cat-img-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.4; transition: transform 0.5s, opacity 0.3s; }
+        .category-card:hover .cat-img-bg { transform: scale(1.05); opacity: 0.6; }
+        
+        .category-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, #020617 20%, transparent 100%); z-index: 1; }
+        
+        .category-info { position: relative; z-index: 2; padding: 25px; width: 100%; display: flex; justify-content: space-between; align-items: center; }
+        .category-info h3 { font-size: 1.3rem; color: #fff; font-weight: 600; }
+        .category-info .badge-count { background: #1e293b; color: #deff9a; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid #334155; }
+
+        /* Área de Produtos */
+        .hidden-section { display: none; border-top: 1px solid #1e293b; padding-top: 40px; }
+        .hidden-section.active { display: block; }
+
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 30px; }
+        
+        .product-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.3s; }
+        .product-card:hover { border-color: #334155; }
+        
+        .img-container { position: relative; width: 100%; height: 240px; background: #1e293b; overflow: hidden; }
+        .product-img { width: 100%; height: 100%; object-fit: cover; }
+        .product-info { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
+        .product-brand { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .product-name { font-size: 1.1rem; color: #fff; font-weight: 600; margin-bottom: 12px; min-height: 48px; }
+        .product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 15px; border-top: 1px solid #1e293b; }
+        .product-price { font-size: 1.25rem; color: #deff9a; font-weight: bold; }
+
+        .btn-whatsapp {
+            background: #25d366; color: #fff; width: 42px; height: 42px; border-radius: 10px;
+            display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 1.3rem;
+            border: none; cursor: pointer; transition: background 0.2s;
+        }
+        .btn-whatsapp:hover { background: #20ba5a; }
+
+        .status-msg { text-align: center; color: #94a3b8; padding: 40px; grid-column: 1 / -1; font-size: 1.1rem; }
+
+        /* ========================================================
+           ✨ LAYOUT DO MODO IMERSIVO (TELA CHEIA)
+        =========================================================== */
+        .bolinha-expandir {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            width: 38px;
+            height: 38px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            color: #fff;
+            font-size: 0.9rem;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+            z-index: 10;
+        }
+
+        .bolinha-expandir i { pointer-events: none; }
+
+        .bolinha-expandir:hover {
+            transform: scale(1.15);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 0 12px rgba(222, 255, 154, 0.6);
+            border-color: #deff9a;
+        }
+
+        .overlay-fullscreen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-color: rgba(2, 6, 23, 0.98);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .overlay-fullscreen.ativo { display: flex; opacity: 1; }
+
+        .foto-fullscreen {
+            max-width: 90%;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+            user-select: none;
+        }
+
+        .bolinha-fechar {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 55px;
+            height: 55px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            color: #fff;
+            font-size: 1.2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 4px 8px rgba(255,255,255,0.15);
+            transition: all 0.3s ease;
+            z-index: 10010;
+        }
+
+        .bolinha-fechar i { pointer-events: none; }
+
+        .bolinha-fechar:hover {
+            transform: translateX(-50%) scale(1.1);
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #f87171;
+        }
+
+        .seta-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 2.5rem;
+            cursor: pointer;
+            padding: 20px;
+            transition: color 0.2s;
+            z-index: 10005;
+        }
+        .seta-nav:hover { color: #fff; }
+        .seta-esq { left: 20px; }
+        .seta-dir { right: 20px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <h1>SP <span>Comercial</span></h1>
+            </div>
+            <div class="contact-top">
+                <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i> Atendimento Rápido
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="banner">
+            <h2>Navegue por Categorias</h2>
+            <p>Selecione uma seção abaixo para ver os nossos produtos disponíveis.</p>
+        </section>
+
+        <h2 class="section-title"><i class="fa-solid fa-layer-group" style="color: #deff9a;"></i> Departamentos</h2>
+        <section class="categories-grid" id="categoriesContainer">
+            <div class="status-msg"><i class="fa-solid fa-spinner fa-spin"></i> Montando vitrine de departamentos...</div>
+        </section>
+
+        <div class="hidden-section" id="productsDisplaySection">
+            <h2 class="section-title" id="selectedCategoryTitle"></h2>
+            <section class="products-grid" id="publicProductsGrid">
+            </section>
+        </div>
+    </main>
+
+    <div class="overlay-fullscreen" id="telaCheiaOverlay">
+        <button class="seta-nav seta-esq" onclick="mudarFotoImersiva(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <img src="" id="imagemAmpliada" class="foto-fullscreen" alt="Visualização Imersiva">
+        <button class="seta-nav seta-dir" onclick="mudarFotoImersiva(1)"><i class="fa-solid fa-chevron-right"></i></button>
+
+        <div class="bolinha-fechar" onclick="fecharModoImersivo()" title="Voltar ao catálogo">
+            <i class="fa-solid fa-compress"></i>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL_PUB = "https://xxxsxsernmaltunwyfaq.supabase.co";
+        const SUPABASE_KEY_PUB = "sb_publishable_sQNMnxWafcK5iF6CCXFFXg_lhx2nTQ-";
+        
+        const supabasePub = window.supabase.createClient(SUPABASE_URL_PUB, SUPABASE_KEY_PUB);
+
+        let whatsappGlobal = "5512999999999"; 
+        let mensagemGlobal = "Olá! Vi esse item no catálogo.";
+        
+        let listaImagensFullscreen = [];
+        let indiceImersivoAtual = 0;
+
+        async function carregarConfiguracoesWhatsApp() {
+            try {
+                const { data } = await supabasePub.from('configuracoes').select('*').eq('id', 1).single();
+                if (data) {
+                    whatsappGlobal = data.numero_whatsapp;
+                    mensagemGlobal = data.mensagem_padrao;
+                }
+            } catch (err) {
+                console.log("Usando dados padrão do WhatsApp:", err.message);
+            }
+        }
+
+        const categoriesContainer = document.getElementById('categoriesContainer');
+        const productsDisplaySection = document.getElementById('productsDisplaySection');
+        const selectedCategoryTitle = document.getElementById('selectedCategoryTitle');
+        const publicProductsGrid = document.getElementById('publicProductsGrid');
+
+        async function loadShowcase() {
+            await carregarConfiguracoesWhatsApp();
+
+            try {
+                try {
+                    const { data: metricaAtual } = await supabasePub.from('metricas').select('visualizacoes').eq('id', 1).single();
+                    if (metricaAtual) {
+                        await supabasePub.from('metricas').update({ visualizacoes: metricaAtual.visualizacoes + 1 }).eq('id', 1);
+                    }
+                } catch (errMetrica) {
+                    console.error("Não foi possível atualizar as visualizações:", errMetrica);
+                }
+
+                const { data: categorias, error: errCat } = await supabasePub
+                    .from('categorias')
+                    .select('id, nome_categoria')
+                    .order('nome_categoria', { ascending: true });
+
+                if (errCat) throw errCat;
+
+                const { data: produtos, error: errProd } = await supabasePub
+                    .from('produtos')
+                    .select('id, nome, imagem_url, categoria_id');
+
+                if (errProd) throw errProd;
+
+                if (!categorias || categorias.length === 0) {
+                    categoriesContainer.innerHTML = `<div class="status-msg">Nenhum departamento cadastrado.</div>`;
+                    return;
+                }
+
+                categoriesContainer.innerHTML = "";
+
+                categorias.forEach(cat => {
+                    const produtosDaCat = produtos.filter(p => p.categoria_id === cat.id);
+                    const totalItens = produtosDaCat.length;
+
+                    const imagemAmostra = totalItens > 0 && produtosDaCat[0].imagem_url 
+                        ? produtosDaCat[0].imagem_url 
+                        : 'https://images.unsplash.com/photo-1581094288338-2314dddb7ece?q=80&w=400&auto=format&fit=crop';
+
+                    const card = document.createElement('div');
+                    card.className = 'category-card';
+                    card.onclick = () => showCategoryProducts(cat.id, cat.nome_categoria);
+
+                    card.innerHTML = `
+                        <img src="${imagemAmostra}" class="cat-img-bg" alt="${cat.nome_categoria}">
+                        <div class="category-overlay"></div>
+                        <div class="category-info">
+                            <h3>${cat.nome_categoria}</h3>
+                            <span class="badge-count">${totalItens} ${totalItens === 1 ? 'item' : 'itens'}</span>
+                        </div>
+                    `;
+                    categoriesContainer.appendChild(card);
+                });
+
+            } catch (err) {
+                console.error("Erro ao estruturar vitrine:", err.message);
+                categoriesContainer.innerHTML = `<div class="status-msg" style="color: #f87171;">Erro ao carregar os departamentos.</div>`;
+            }
+        }
+
+        async function registrarCliqueWhats(link) {
+            try {
+                const { data: metricaAtual } = await supabasePub.from('metricas').select('cliques_whatsapp').eq('id', 1).single();
+                if (metricaAtual) {
+                    await supabasePub.from('metricas').update({ cliques_whatsapp: metricaAtual.cliques_whatsapp + 1 }).eq('id', 1);
+                }
+            } catch (err) {
+                console.error("Erro ao registrar clique no banco:", err);
+            }
+            window.open(link, '_blank');
+        }
+
+        async function showCategoryProducts(categoriaId, nomeCategoria) {
+            try {
+                productsDisplaySection.classList.add('active');
+                selectedCategoryTitle.innerHTML = `<i class="fa-solid fa-boxes-shadow"></i> Vendo: <span style="color: #deff9a; margin-left: 5px;">${nomeCategoria}</span>`;
+                
+                publicProductsGrid.innerHTML = `<div class="status-msg"><i class="fa-solid fa-spinner fa-spin"></i> Abrindo produtos...</div>`;
+                productsDisplaySection.scrollIntoView({ behavior: 'smooth' });
+
+                const { data: produtos, error } = await supabasePub
+                    .from('produtos')
+                    .select('*')
+                    .eq('categoria_id', categoriaId)
+                    .order('id', { ascending: false });
+
+                if (error) throw error;
+
+                if (!produtos || produtos.length === 0) {
+                    publicProductsGrid.innerHTML = `<div class="status-msg">Nenhum produto em estoque para ${nomeCategoria} no momento.</div>`;
+                    return;
+                }
+
+                publicProductsGrid.innerHTML = "";
+
+                produtos.forEach((item, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'product-card';
+                    
+                    const imgUrl = item.imagem_url || 'https://via.placeholder.com/300x240?text=Sem+Foto';
+                    const mensagemWhats = `${mensagemGlobal} - Produto: *${item.nome}* (Marca: ${item.marca || 'Geral'}) do departamento de ${nomeCategoria}.`;
+                    const linkZap = `https://api.whatsapp.com/send?phone=${whatsappGlobal}&text=${encodeURIComponent(mensagemWhats)}`;
+
+                    card.innerHTML = `
+                        <div class="img-container">
+                            <img src="${imgUrl}" class="product-img" alt="${item.nome}">
+                            <div class="bolinha-expandir" onclick="abrirModoImersivo(${index})" title="Ver em tela cheia">
+                                <i class="fa-solid fa-expand"></i>
+                            </div>
+                        </div>
+                        <div class="product-info">
+                            <span class="product-brand">${item.marca || 'Geral'}</span>
+                            <h3 class="product-name">${item.nome}</h3>
+                            <div class="product-footer">
+                                <span class="product-price">${item.preco || 'Sob Consulta'}</span>
+                                <button onclick="registrarCliqueWhats('${linkZap}')" class="btn-whatsapp" title="Pedir no WhatsApp">
+                                    <i class="fa-brands fa-whatsapp"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    publicProductsGrid.appendChild(card);
+                });
+
+            } catch (err) {
+                publicProductsGrid.innerHTML = `<div class="status-msg" style="color: #f87171;">Erro ao processar produtos da categoria.</div>`;
+            }
+        }
+
+        /* LÓGICA DO TELA CHEIA IMERSIVO */
+        function abrirModoImersivo(index) {
+            const elementosImagens = document.querySelectorAll('.product-img');
+            listaImagensFullscreen = Array.from(elementosImagens).map(img => img.src);
+            
+            if (listaImagensFullscreen.length === 0) return;
+
+            indiceImersivoAtual = index;
+            atualizarFotoImersiva();
+            
+            document.getElementById('telaCheiaOverlay').classList.add('ativo');
+        }
+
+        function fecharModoImersivo() {
+            document.getElementById('telaCheiaOverlay').classList.remove('ativo');
+        }
+
+        function mudarFotoImersiva(direcao) {
+            if (listaImagensFullscreen.length === 0) return;
+            
+            indiceImersivoAtual += direcao;
+            
+            if (indiceImersivoAtual >= listaImagensFullscreen.length) {
+                indiceImersivoAtual = 0;
+            } else if (indiceImersivoAtual < 0) {
+                indiceImersivoAtual = listaImagensFullscreen.length - 1;
+            }
+            
+            atualizarFotoImersiva();
+        }
+
+        function atualizarFotoImersiva() {
+            const imgAmpliada = document.getElementById('imagemAmpliada');
+            if (imgAmpliada && listaImagensFullscreen[indiceImersivoAtual]) {
+                imgAmpliada.src = listaImagensFullscreen[indiceImersivoAtual];
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            const overlay = document.getElementById('telaCheiaOverlay');
+            if (!overlay || !overlay.classList.contains('ativo')) return;
+            
+            if (e.key === 'Escape') fecharModoImersivo();
+            if (e.key === 'ArrowRight') mudarFotoImersiva(1);
+            if (e.key === 'ArrowLeft') mudarFotoImersiva(-1);
+        });
+
+        loadShowcase();
+    </script>
+</body>
+</html>
