@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestão de Parceiros - SP Comercial</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #0f172a; color: #f8fafc; font-family: sans-serif; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: #1e293b; padding: 20px; border-radius: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border-bottom: 1px solid #334155; text-align: left; }
+        th { background: #0f172a; }
+        button { cursor: pointer; padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Fiscalização de Parceiros</h2>
+    <table id="tabelaParceiros">
+        <thead>
+            <tr>
+                <th>E-mail</th>
+                <th>Cliques</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="tbodyParceiros">
+            <tr><td colspan="4">Carregando dados...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Inicialização única
+    const db = window.supabase.createClient(
+        'https://xxxsxsernmaltunwyfaq.supabase.co', 
+        'sb_publishable_sQNMnxWafcK5iF6CCXFFXg_lhx2nTQ-'
+    );
+
+    async function carregarGestao() {
+        const { data, error } = await db.from('usuarios_afiliados').select('*');
+        const tbody = document.getElementById('tbodyParceiros');
+        
+        if (error) {
+            tbody.innerHTML = `<tr><td colspan="4">Erro: ${error.message}</td></tr>`;
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4">Nenhum parceiro encontrado.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = data.map(u => `
+            <tr>
+                <td>${u.email}</td>
+                <td>${u.hits || 0}</td>
+                <td>${u.status}</td>
+                <td>
+                    <button onclick="alternarStatus('${u.id}', '${u.status}')">
+                        ${u.status === 'ativo' ? 'Bloquear' : 'Ativar'}
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function alternarStatus(id, atual) {
+        const novo = atual === 'ativo' ? 'bloqueado' : 'ativo';
+        await db.from('usuarios_afiliados').update({ status: novo }).eq('id', id);
+        carregarGestao();
+    }
+
+    carregarGestao();
+</script>
+</body>
+</html>
