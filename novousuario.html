@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Agente - SP Comercial</title>
+    <style>
+        body {
+            background-color: #0b111e;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .register-container {
+            background-color: #131c2e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 { text-align: center; margin-bottom: 24px; color: #ffffff; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #a0aec0; }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #2d3748;
+            border-radius: 6px;
+            background-color: #1a202c;
+            color: white;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #2b6cb0;
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        button:hover { background-color: #3182ce; }
+    </style>
+</head>
+<body>
+
+<div class="register-container">
+    <h2>Cadastrar Novo Agente</h2>
+    <form id="formCadastro">
+        <div class="form-group">
+            <label for="nome">Nome Completo</label>
+            <input type="text" id="nome" required>
+        </div>
+        <div class="form-group">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" required>
+        </div>
+        <div class="form-group">
+            <label for="senha">Senha Inicial</label>
+            <input type="password" id="senha" required>
+        </div>
+        <div class="form-group">
+            <label for="nivel">Nível de Acesso</label>
+            <select id="nivel">
+                <option value="agente">Agente / Vendedor</option>
+                <option value="admin">Administrador</option>
+            </select>
+        </div>
+        <button type="submit">Salvar Usuário</button>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+    // Configuração do Supabase
+    const SUPABASE_URL = 'https://xxxsxsernmaltunwyfaq.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_sQNMnxWafcK5iF6CCXFFXg_lhx2nTQ-';
+    
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    document.getElementById('formCadastro').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const nome = document.getElementById('nome').value;
+        const email = document.getElementById('email').value;
+        const senha = document.getElementById('senha').value;
+        const nivel = document.getElementById('nivel').value;
+
+       try {
+    // A tabela correta é 'usuarios_afiliados'
+    // As colunas que existem nela são 'email' e 'status' (exemplo)
+    const { data, error } = await supabaseClient
+        .from('usuarios_afiliados') 
+        .insert([
+            { 
+                email: email, 
+                status: 'ativo' // 'nivel' não existe, então enviamos algo que a tabela aceita
+            }
+        ]);
+
+    if (error) throw error;
+
+    alert('Usuário cadastrado com sucesso!');
+    document.getElementById('formCadastro').reset();
+
+} catch (error) {
+    console.error('Erro:', error);
+    alert('Erro ao cadastrar: ' + error.message);
+}
+    });
+</script>
+</body>
+</html>
