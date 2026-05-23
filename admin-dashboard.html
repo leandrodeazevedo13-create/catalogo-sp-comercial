@@ -173,6 +173,32 @@
         .btn-cancel:hover { background: #334155; color: #fff; }
         .btn-save { background: #deff9a; border: none; color: #000; padding: 12px 24px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         .btn-save:hover { background: #c5f57a; }
+        /* AJUSTE MOBILE PARA O ADMIN */
+@media (max-width: 768px) {
+    body { flex-direction: column; }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+        padding: 15px;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        border-right: none;
+        border-bottom: 1px solid #1e293b;
+    }
+
+    .menu-items { flex-direction: row; gap: 5px; }
+    .menu-btn { padding: 10px; font-size: 0.8rem; }
+    
+    .main-content { padding: 15px; }
+    
+    table { font-size: 0.8rem; }
+    td, th { padding: 8px; }
+    .product-img { width: 30px; height: 30px; }
+    
+    .stats-grid { grid-template-columns: 1fr; }
+}
     </style>
 </head>
 <body>
