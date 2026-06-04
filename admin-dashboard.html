@@ -296,10 +296,11 @@
         const btnRelatorios = document.getElementById('btn-aba-relatorios');
         const btnConfig = document.getElementById('btn-aba-config');
         const btnAparencia = document.getElementById('btn-aba-aparencia');
-        const abaAparencia = document.getElementById('conteudo-aparencia');
         const abaProdutos = document.getElementById('conteudo-produtos');
         const abaRelatorios = document.getElementById('conteudo-relatorios');
         const abaConfig = document.getElementById('conteudo-config');
+        const abaAparencia = document.getElementById('conteudo-aparencia');
+        const aparenciaForm = document.getElementById('aparenciaForm');
 
         let fotosExistentes = [];
         let sortableInstance = null;
@@ -312,38 +313,37 @@
         const closeQRModalX = document.getElementById('closeQRModalX');
 
         function alternarAba(abaParaMostrar, botaoAtivo) {
-    abaProdutos.style.display = 'none';
-    abaRelatorios.style.display = 'none';
-    abaConfig.style.display = 'none';
-    abaAparencia.style.display = 'none'; // <-- ADICIONA ESSA LINHA
-    btnProdutos.classList.remove('active');
-    btnRelatorios.classList.remove('active');
-    btnConfig.classList.remove('active');
-    btnAparencia.classList.remove('active'); // <-- ADICIONA ESSA LINHA
-    abaParaMostrar.style.display = 'block';
-    botaoAtivo.classList.add('active');
-}
-
+            abaProdutos.style.display = 'none';
+            abaRelatorios.style.display = 'none';
+            abaConfig.style.display = 'none';
+            abaAparencia.style.display = 'none';
+            btnProdutos.classList.remove('active');
+            btnRelatorios.classList.remove('active');
+            btnConfig.classList.remove('active');
+            btnAparencia.classList.remove('active');
+            abaParaMostrar.style.display = 'block';
+            botaoAtivo.classList.add('active');
+        }
         btnProdutos.addEventListener('click', () => alternarAba(abaProdutos, btnProdutos));
         btnRelatorios.addEventListener('click', () => alternarAba(abaRelatorios, btnRelatorios));
         btnConfig.addEventListener('click', () => alternarAba(abaConfig, btnConfig));
 
-        openModalBtn.addEventListener('click', async () => { 
+        openModalBtn.addEventListener('click', async () => {
             modalTitle.innerText = "Adicionar Novo Produto";
             btnSaveProduct.innerText = "Salvar Produto";
-            editProductId.value = ""; 
-            prodImagemFileInput.required = true; 
+            editProductId.value = "";
+            prodImagemFileInput.required = true;
             uploadLabel.innerText = "FOTOS DO PRODUTO (Pode selecionar várias)";
             productForm.reset();
             fotosExistentes = [];
             previewFotos.innerHTML = '';
-            productModal.classList.add('active'); 
-            await fetchCategories();             
+            productModal.classList.add('active');
+            await fetchCategories();
         });
-        
-        const fecharModal = () => { 
-            productModal.classList.remove('active'); 
-            productForm.reset(); 
+
+        const fecharModal = () => {
+            productModal.classList.remove('active');
+            productForm.reset();
             fotosExistentes = [];
             previewFotos.innerHTML = '';
             if (sortableInstance) sortableInstance.destroy();
@@ -383,7 +383,7 @@
 
         function atualizarPreviewFotos(novasFiles = [], manterExistentes = true) {
             if (!manterExistentes) previewFotos.innerHTML = '';
-            
+
             if (manterExistentes) {
                 fotosExistentes.forEach((url, index) => {
                     if (!document.querySelector(`[data-url="${url}"]`)) {
@@ -400,7 +400,7 @@
                     }
                 });
             }
-            
+
             novasFiles.forEach((file, index) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -439,7 +439,7 @@
 
         async function checkUserSession() {
             const { data: { session }, error } = await supabaseDash.auth.getSession();
-            if (error || !session) {
+            if (error ||!session) {
                 window.location.href = "admin-login.html";
                 return;
             }
@@ -448,8 +448,8 @@
             slugVendedor = session.user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
             linkPersonalizado = `https://catalogo-sp-comercial.vercel.app/?v=${slugVendedor}`;
 
-            await fetchCategories();      
-            await fetchAdminProducts();   
+            await fetchCategories();
+            await fetchAdminProducts();
             await fetchMetrics();
             setupBotoesVendedor();
         }
@@ -479,9 +479,6 @@
                 document.getElementById('linkVendedor').innerText = linkPersonalizado;
                 qrModal.classList.add('active');
             });
-
-            closeQRModalX.addEventListener('click', () => qrModal.classList.remove('active'));
- });
 
             closeQRModalX.addEventListener('click', () => qrModal.classList.remove('active'));
 
@@ -540,7 +537,7 @@
                 const { error } = await supabaseDash.from('categorias').insert([{ nome_categoria: nomeCat }]);
                 if (error) throw error;
                 alert("Categoria criada com sucesso!");
-                fecharCatModal(); 
+                fecharCatModal();
                 await fetchCategories();
             } catch (err) {
                 alert("Erro ao criar categoria: " + err.message);
@@ -601,10 +598,10 @@
         window.openEditModal = async function(id) {
             try {
                 const { data: produto, error } = await supabaseDash
-                 .from('produtos')
-                 .select('*, produto_imagens(url, ordem)')
-                 .eq('id', id)
-                 .single();
+                .from('produtos')
+                .select('*, produto_imagens(url, ordem)')
+                .eq('id', id)
+                .single();
 
                 if (error) throw error;
                 await fetchCategories();
@@ -708,26 +705,26 @@
                 if (isEditing) {
                     produtoId = parseInt(editProductId.value);
                     const { error: updateError } = await supabaseDash
-                     .from('produtos')
-                     .update(dadosProduto)
-                     .eq('id', produtoId);
+                    .from('produtos')
+                    .update(dadosProduto)
+                    .eq('id', produtoId);
 
                     if (updateError) throw updateError;
                 } else {
                     const { data: novoProduto, error: insertError } = await supabaseDash
-                     .from('produtos')
-                     .insert([dadosProduto])
-                     .select()
-                     .single();
+                    .from('produtos')
+                    .insert([dadosProduto])
+                    .select()
+                    .single();
                     if (insertError) throw insertError;
                     produtoId = novoProduto.id;
                 }
 
                 if (isEditing) {
                     const { data: fotosAntigas } = await supabaseDash
-                     .from('produto_imagens')
-                     .select('url')
-                     .eq('produto_id', produtoId);
+                    .from('produto_imagens')
+                    .select('url')
+                    .eq('produto_id', produtoId);
 
                     const urlsParaDeletar = fotosAntigas?.filter(f =>!fotosExistentes.includes(f.url)).map(f => f.url) || [];
 
@@ -782,45 +779,42 @@
         });
 
         document.addEventListener('DOMContentLoaded', checkUserSession);
-    // ===== ABA APARÊNCIA =====
-const btnAparencia = document.getElementById('btn-aba-aparencia');
-const abaAparencia = document.getElementById('conteudo-aparencia');
-const aparenciaForm = document.getElementById('aparenciaForm');
 
-btnAparencia.addEventListener('click', () => alternarAba(abaAparencia, btnAparencia));
+        // ===== ABA APARÊNCIA =====
+        btnAparencia.addEventListener('click', () => alternarAba(abaAparencia, btnAparencia));
 
-btnAparencia.addEventListener('click', async () => {
-    const { data } = await supabaseDash.from('config_loja').select('*').eq('id', 1).single();
-    if (data) {
-        document.getElementById('configNomeLoja').value = data.nome_loja || '';
-        document.getElementById('configLogoUrl').value = data.logo_url || '';
-        document.getElementById('configCorPrimaria').value = data.cor_primaria || '#deff9a';
-        document.getElementById('configCorFundo').value = data.cor_fundo || '#020617';
-    }
-});
+        btnAparencia.addEventListener('click', async () => {
+            const { data } = await supabaseDash.from('config_loja').select('*').eq('id', 1).single();
+            if (data) {
+                document.getElementById('configNomeLoja').value = data.nome_loja || '';
+                document.getElementById('configLogoUrl').value = data.logo_url || '';
+                document.getElementById('configCorPrimaria').value = data.cor_primaria || '#deff9a';
+                document.getElementById('configCorFundo').value = data.cor_fundo || '#020617';
+            }
+        });
 
-aparenciaForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = e.target.querySelector('.btn-save');
-    btn.innerText = 'Salvando...';
-    btn.disabled = true;
-    
-    const { error } = await supabaseDash.from('config_loja').update({
-        nome_loja: document.getElementById('configNomeLoja').value,
-        logo_url: document.getElementById('configLogoUrl').value,
-        cor_primaria: document.getElementById('configCorPrimaria').value,
-        cor_fundo: document.getElementById('configCorFundo').value
-    }).eq('id', 1);
-    
-    if (error) {
-        alert('Erro: ' + error.message);
-    } else {
-        alert('Aparência atualizada! Recarrega o catálogo pra ver.');
-    }
-    
-    btn.innerText = 'Salvar Aparência';
-    btn.disabled = false;
-});
+        aparenciaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('.btn-save');
+            btn.innerText = 'Salvando...';
+            btn.disabled = true;
+
+            const { error } = await supabaseDash.from('config_loja').update({
+                nome_loja: document.getElementById('configNomeLoja').value,
+                logo_url: document.getElementById('configLogoUrl').value,
+                cor_primaria: document.getElementById('configCorPrimaria').value,
+                cor_fundo: document.getElementById('configCorFundo').value
+            }).eq('id', 1);
+
+            if (error) {
+                alert('Erro: ' + error.message);
+            } else {
+                alert('Aparência atualizada!');
+            }
+
+            btn.innerText = 'Salvar Aparência';
+            btn.disabled = false;
+        });
     </script>
 </body>
 </html>
