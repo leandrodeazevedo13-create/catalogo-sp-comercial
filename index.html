@@ -139,9 +139,9 @@
 
         .categories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
         .category-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; cursor: pointer; height: 200px; display: flex; align-items: flex-end; position: relative; }
-        .cat-img-bg { position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0.4; }
-        .category-overlay { position: absolute; width: 100%; height: 100%; background: linear-gradient(to top, #020617 20%, transparent 100%); }
-        .category-info { position: relative; padding: 25px; color: #fff; font-weight: 600; }
+        .cat-img-bg { position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
+        .category-overlay { position: absolute; width: 100%; height: 100%; background: linear-gradient(to top, rgba(2,6,23,0.7) 0%, transparent 60%); }
+        .category-info { position: relative; padding: 25px; color: #fff; font-weight: 600; text-shadow: 0 2px 8px rgba(0,0,0,0.9); }
         
         #productsDisplaySection { display: none; }
         
@@ -222,6 +222,7 @@
 
         const NOME_CATEGORIA_OFERTAS = "Ofertas"; 
         let swiperInstance;
+        let historicoTelas = ['categorias'];
 
         function initSwiper() {
             swiperInstance = new Swiper(".bannerSwiper", {
@@ -292,6 +293,8 @@
             document.getElementById('productsDisplaySection').style.display = 'block';
             document.getElementById('btnVoltarFixo').style.display = 'block';
             document.getElementById('selectedCategoryTitle').innerText = nome;
+            historicoTelas.push('produtos');
+            history.pushState({tela: 'produtos'}, '', '#produtos');
             renderProdutos(id);
         }
 
@@ -299,7 +302,18 @@
             document.getElementById('telaCategorias').style.display = 'block';
             document.getElementById('productsDisplaySection').style.display = 'none';
             document.getElementById('btnVoltarFixo').style.display = 'none';
+            historicoTelas.pop();
+            history.pushState({tela: 'categorias'}, '', '#categorias');
         }
+
+        // BLOQUEIA O BOTÃO VOLTAR DO CELULAR DE SAIR DA PÁGINA
+        window.addEventListener('popstate', function(event) {
+            if (historicoTelas.length > 1) {
+                voltarCategorias();
+            } else {
+                history.pushState(null, null, '#categorias');
+            }
+        });
 
         async function renderProdutos(catId) {
             try {
