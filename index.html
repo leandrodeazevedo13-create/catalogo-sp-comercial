@@ -223,7 +223,9 @@
         const NOME_CATEGORIA_OFERTAS = "Ofertas"; 
         let swiperInstance;
         let historicoTelas = ['categorias'];
-
+        let whatsappVendedor = '5512997301639'; // PADRÃO - troca pelo seu número principal
+        const urlParams = new URLSearchParams(window.location.search);
+        const vendedorSlug = urlParams.get('v');
         function initSwiper() {
             swiperInstance = new Swiper(".bannerSwiper", {
                 spaceBetween: 30,
@@ -238,6 +240,11 @@
 
         async function loadShowcase() {
             try {
+        // SE TEM VENDEDOR NA URL, BUSCA O WHATSAPP DELE
+        if (vendedorSlug) {
+            const { data: vendedor } = await supabasePub.from('vendedores').select('whatsapp_numero').eq('slug', vendedorSlug).single();
+            if (vendedor?.whatsapp_numero) whatsappVendedor = vendedor.whatsapp_numero;
+        }
                 const { data: categorias } = await supabasePub.from('categorias').select('*');
                 const { data: produtos } = await supabasePub.from('produtos').select('*');
                 
@@ -339,7 +346,7 @@
                             <h3>${item.nome}</h3>
                             <div class="product-footer">
                                 <span>${precoFormatado}</span>
-                                <a href="https://wa.me/5512997301639?text=Olá! Tenho interesse no produto: ${item.nome}" target="_blank" class="btn-whatsapp">
+                                <a href="https://wa.me/${whatsappVendedor}?text=Olá! Tenho interesse no produto: ${item.nome}" target="_blank" class="btn-whatsapp">
                                     <i class="fa-brands fa-whatsapp"></i>
                                 </a>
                             </div>
