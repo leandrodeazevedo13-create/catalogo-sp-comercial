@@ -9,7 +9,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #020617; color: #f8fafc; min-height: 100vh; }
+ :root {
+    --cor-primaria: #deff9a;
+    --cor-fundo: #020617;
+}
+body { background-color: var(--cor-fundo); color: #f8fafc; }
         
         /* CORREÇÃO DO TOPO: Espaçamento ideal para o logo aparecer perfeito */
         header { 
@@ -83,7 +87,7 @@
             z-index: 2;
         }
         
-        .swiper-slide span { font-size: 1.1rem; color: #deff9a; font-weight: normal; margin-top: 10px; letter-spacing: 1px; }
+        .swiper-slide span { font-size: 1.1rem; color: var(--cor-primaria); font-weight: normal; margin-top: 10px; letter-spacing: 1px; }
         
         /* Detalhes do Produto flutuando sobre o carrossel */
         .slide-detalhes-produto {
@@ -99,7 +103,7 @@
             z-index: 3;
         }
         .slide-detalhes-produto h4 { font-size: 1.1rem; margin-bottom: 2px; color: #fff; text-transform: capitalize; }
-        .slide-detalhes-produto p { font-size: 1rem; color: #deff9a; font-weight: bold; }
+        .slide-detalhes-produto p { font-size: 1rem; color: var(--cor-primaria); font-weight: bold; }
 
         .oferta-tag {
             position: absolute;
@@ -151,7 +155,7 @@
         .product-img { width: 100%; height: 100%; object-fit: cover; }
         .product-info { padding: 20px; }
         .product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
-        .product-footer span { font-size: 1.25rem; font-weight: bold; color: #deff9a; }
+        .product-footer span { font-size: 1.25rem; font-weight: bold; color: var(--cor-primaria); }
         .btn-whatsapp { background: #25d366; color: #fff; padding: 10px 15px; border-radius: 10px; text-decoration: none; font-weight: bold; }
         
         /* Modal de Visualização Imersiva */
@@ -161,7 +165,7 @@
         
         .detalhes-fullscreen { text-align: center; margin-top: 20px; max-width: 90%; }
         .detalhes-fullscreen h3 { font-size: 1.4rem; color: #fff; margin-bottom: 8px; }
-        .detalhes-fullscreen p { font-size: 1.3rem; color: #deff9a; font-weight: bold; }
+        .detalhes-fullscreen p { font-size: 1.3rem; color: var(--cor-primaria); font-weight: bold; }
         
         .bolinha-fechar { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 2.5rem; color: #94a3b8; }
     </style>
@@ -239,7 +243,17 @@
         }
 
         async function loadShowcase() {
-            try {
+    try {
+        // APLICA CONFIG DE APARÊNCIA DA LOJA
+        const { data: config } = await supabasePub.from('config_loja').select('*').eq('id', 1).single();
+        if (config) {
+            document.documentElement.style.setProperty('--cor-primaria', config.cor_primaria);
+            document.documentElement.style.setProperty('--cor-fundo', config.cor_fundo);
+            document.querySelector('.logo-img').src = config.logo_url;
+            document.title = config.nome_loja + ' - Catálogo';
+        }
+
+        // resto do código continua igual...
         // SE TEM VENDEDOR NA URL, BUSCA O WHATSAPP DELE
         if (vendedorSlug) {
             const { data: vendedor } = await supabasePub.from('vendedores').select('whatsapp_numero').eq('slug', vendedorSlug).single();
