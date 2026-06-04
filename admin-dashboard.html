@@ -96,7 +96,7 @@
             <nav class="menu-items">
                 <button class="menu-btn active" id="btn-aba-produtos"><i class="fa-solid fa-box"></i> Produtos</button>
                 <button class="menu-btn" id="btn-aba-relatorios"><i class="fa-solid fa-chart-line"></i> Relatórios</button>
-                <button class="menu-btn" id="btn-aba-config"><i class="fa-solid fa-sliders"></i> Configurações</button>
+                <button class="menu-btn" id="btn-aba-config"><i class="fa-solid fa-sliders"></i> Configurações</button><button class="menu-btn" id="btn-aba-aparencia"><i class="fa-solid fa-palette"></i> Aparência da Loja</button>
             </nav>
         </div>
         <button class="menu-btn btn-logout" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Sair do Painel</button>
@@ -175,7 +175,31 @@
                     <button type="submit" class="btn-save" style="margin-top: 10px;">Salvar Configurações</button>
                 </form>
             </section>
-        </div>
+        </div><div id="conteudo-aparencia" class="aba-conteudo" style="display: none;">
+    <section class="section-box">
+        <h2>Aparência do Catálogo</h2>
+        <p style="color: #94a3b8; margin: 10px 0 30px;">Mude as cores e logo. Aplica pra todos os vendedores.</p>
+        <form id="aparenciaForm" style="max-width: 500px;">
+            <div class="form-group">
+                <label>NOME DA LOJA</label>
+                <input type="text" id="configNomeLoja" required>
+            </div>
+            <div class="form-group">
+                <label>URL DO LOGO</label>
+                <input type="text" id="configLogoUrl" placeholder="https://i.imgur.com/seulogo.png">
+            </div>
+            <div class="form-group">
+                <label>COR PRIMÁRIA</label>
+                <input type="color" id="configCorPrimaria" style="height: 50px; width: 100%; cursor: pointer;">
+            </div>
+            <div class="form-group">
+                <label>COR DO FUNDO</label>
+                <input type="color" id="configCorFundo" style="height: 50px; width: 100%; cursor: pointer;">
+            </div>
+            <button type="submit" class="btn-save" style="margin-top: 10px;">Salvar Aparência</button>
+        </form>
+    </section>
+</div>
     </main>
 
     <div class="modal-overlay" id="productModal">
@@ -271,6 +295,8 @@
         const btnProdutos = document.getElementById('btn-aba-produtos');
         const btnRelatorios = document.getElementById('btn-aba-relatorios');
         const btnConfig = document.getElementById('btn-aba-config');
+        const btnAparencia = document.getElementById('btn-aba-aparencia');
+        const abaAparencia = document.getElementById('conteudo-aparencia');
         const abaProdutos = document.getElementById('conteudo-produtos');
         const abaRelatorios = document.getElementById('conteudo-relatorios');
         const abaConfig = document.getElementById('conteudo-config');
@@ -286,15 +312,17 @@
         const closeQRModalX = document.getElementById('closeQRModalX');
 
         function alternarAba(abaParaMostrar, botaoAtivo) {
-            abaProdutos.style.display = 'none';
-            abaRelatorios.style.display = 'none';
-            abaConfig.style.display = 'none';
-            btnProdutos.classList.remove('active');
-            btnRelatorios.classList.remove('active');
-            btnConfig.classList.remove('active');
-            abaParaMostrar.style.display = 'block';
-            botaoAtivo.classList.add('active');
-        }
+    abaProdutos.style.display = 'none';
+    abaRelatorios.style.display = 'none';
+    abaConfig.style.display = 'none';
+    abaAparencia.style.display = 'none'; // <-- ADICIONA ESSA LINHA
+    btnProdutos.classList.remove('active');
+    btnRelatorios.classList.remove('active');
+    btnConfig.classList.remove('active');
+    btnAparencia.classList.remove('active'); // <-- ADICIONA ESSA LINHA
+    abaParaMostrar.style.display = 'block';
+    botaoAtivo.classList.add('active');
+}
 
         btnProdutos.addEventListener('click', () => alternarAba(abaProdutos, btnProdutos));
         btnRelatorios.addEventListener('click', () => alternarAba(abaRelatorios, btnRelatorios));
@@ -754,6 +782,45 @@
         });
 
         document.addEventListener('DOMContentLoaded', checkUserSession);
+    // ===== ABA APARÊNCIA =====
+const btnAparencia = document.getElementById('btn-aba-aparencia');
+const abaAparencia = document.getElementById('conteudo-aparencia');
+const aparenciaForm = document.getElementById('aparenciaForm');
+
+btnAparencia.addEventListener('click', () => alternarAba(abaAparencia, btnAparencia));
+
+btnAparencia.addEventListener('click', async () => {
+    const { data } = await supabaseDash.from('config_loja').select('*').eq('id', 1).single();
+    if (data) {
+        document.getElementById('configNomeLoja').value = data.nome_loja || '';
+        document.getElementById('configLogoUrl').value = data.logo_url || '';
+        document.getElementById('configCorPrimaria').value = data.cor_primaria || '#deff9a';
+        document.getElementById('configCorFundo').value = data.cor_fundo || '#020617';
+    }
+});
+
+aparenciaForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('.btn-save');
+    btn.innerText = 'Salvando...';
+    btn.disabled = true;
+    
+    const { error } = await supabaseDash.from('config_loja').update({
+        nome_loja: document.getElementById('configNomeLoja').value,
+        logo_url: document.getElementById('configLogoUrl').value,
+        cor_primaria: document.getElementById('configCorPrimaria').value,
+        cor_fundo: document.getElementById('configCorFundo').value
+    }).eq('id', 1);
+    
+    if (error) {
+        alert('Erro: ' + error.message);
+    } else {
+        alert('Aparência atualizada! Recarrega o catálogo pra ver.');
+    }
+    
+    btn.innerText = 'Salvar Aparência';
+    btn.disabled = false;
+});
     </script>
 </body>
 </html>
