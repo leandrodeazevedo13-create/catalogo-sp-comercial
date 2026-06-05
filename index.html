@@ -446,14 +446,11 @@ function showCategoryProducts(id, nome) {
        async function renderProdutos(catId) {
     try {
         const { data: produtos, error: errProd } = await supabasePub
-.from('produtos')
-.select('id, nome, preco, categoria_id, produto_imagens(url, ordem)');
+       .from('produtos')
+       .select('id, nome, preco, categoria_id, produto_imagens(url, ordem)')
+       .eq('categoria_id', catId);
 
-if (errProd) console.error('Erro ao buscar produtos:', errProd);
-if (!produtos || produtos.length === 0) {
-console.warn('Nenhum produto encontrado. Verifica se tem produto cadastrado e se RLS tá liberado.');
-}
-.eq('categoria_id', catId);
+        if (errProd) console.error('Erro ao buscar produtos:', errProd);
 
         const grid = document.getElementById('publicProductsGrid');
 
