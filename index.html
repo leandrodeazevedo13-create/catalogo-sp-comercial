@@ -403,8 +403,11 @@
 
         container.innerHTML = mapCategorias.map(cat => {
             const prods = produtos?.filter(p => p.categoria_id === cat.id) || [];
-            const primeiraImgCat = prods[0]?.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url || 'https://via.placeholder.com/400x200';
-            return `<div class="category-card" onclick="showCategoryProducts('${cat.id}', '${cat.nome_categoria}')">
+            const arquivoImgCat = prods[0]?.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url;
+            const primeiraImgCat = arquivoImgCat
+                 ? supabasePub.storage.from('PRODUTOS').getPublicUrl(arquivoImgCat).data.publicUrl
+                     : 'https://via.placeholder.com/400x200';
+                    return `<div class="category-card" onclick="showCategoryProducts('${cat.id}', '${cat.nome_categoria}')">
                         <img src="${primeiraImgCat}" class="cat-img-bg">
                         <div class="category-overlay"></div>
                         <div class="category-info"><h3>${cat.nome_categoria}</h3></div>
