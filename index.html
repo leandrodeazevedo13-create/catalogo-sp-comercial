@@ -168,7 +168,53 @@ body { background-color: var(--cor-fundo); color: #f8fafc; }
         .detalhes-fullscreen p { font-size: 1.3rem; color: var(--cor-primaria); font-weight: bold; }
         
         .bolinha-fechar { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 2.5rem; color: #94a3b8; }
-    </style>
+   /* CARRINHO */
+.btn-carrinho-add { 
+    background: var(--cor-primaria); 
+    color: #020617; 
+    border: none; 
+    padding: 8px 12px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+.btn-carrinho-add:hover { opacity: 0.8; }
+
+.carrinho-flutuante {
+    position: fixed;
+    bottom: 90px;
+    right: 25px;
+    background: var(--cor-primaria);
+    color: #020617;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    z-index: 99;
+    display: none;
+}
+.carrinho-contador {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+   </style>
 </head>
 <body>
 
@@ -219,7 +265,10 @@ body { background-color: var(--cor-fundo); color: #f8fafc; }
             <p id="textoAmpliadoPreco">R$ 0,00</p>
         </div>
     </div>
-
+<div class="carrinho-flutuante" id="btnCarrinho" onclick="abrirCarrinho()">
+    <i class="fa-solid fa-shopping-bag"></i>
+    <span class="carrinho-contador" id="contadorCarrinho">0</span>
+</div>
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
         const supabasePub = window.supabase.createClient("https://xxxsxsernmaltunwyfaq.supabase.co", "sb_publishable_sQNMnxWafcK5iF6CCXFFXg_lhx2nTQ-");
@@ -253,61 +302,66 @@ body { background-color: var(--cor-fundo); color: #f8fafc; }
             document.title = config.nome_loja + ' - Catálogo';
         }
 
-        // resto do código continua igual...
         // SE TEM VENDEDOR NA URL, BUSCA O WHATSAPP DELE
         if (vendedorSlug) {
             const { data: vendedor } = await supabasePub.from('vendedores').select('whatsapp_numero').eq('slug', vendedorSlug).single();
             if (vendedor?.whatsapp_numero) whatsappVendedor = vendedor.whatsapp_numero;
         }
-                const { data: categorias } = await supabasePub.from('categorias').select('*');
-                const { data: produtos } = await supabasePub.from('produtos').select('*');
-                
-                const categoriaOfertaObjeto = categorias ? categorias.find(c => c.nome_categoria.toLowerCase().trim() === NOME_CATEGORIA_OFERTAS.toLowerCase().trim()) : null;
-                
-                if (categoriaOfertaObjeto && produtos) {
-                    const carouselWrapper = document.getElementById('carouselWrapper');
-                    const produtosFiltradosEmOferta = produtos.filter(p => p.categoria_id === categoriaOfertaObjeto.id);
-                    
-                    let slidesHTML = '';
-                    produtosFiltradosEmOferta.forEach(prod => {
-                        const precoFormatado = prod.preco ? prod.preco : 'Consulte';
-                        const nomeEscapado = prod.nome.replace(/'/g, "\\'");
-                        const precoEscapado = precoFormatado.replace(/'/g, "\\'");
-                        
-                        slidesHTML += `
-                        <div class="swiper-slide" data-swiper-autoplay="6000" style="cursor:pointer;" onclick="abrirModoImersivo('${prod.imagem_url}', '${nomeEscapado}', '${precoEscapado}')">
-                            <div class="slide-bg-blur" style="background: url('${prod.imagem_url}');"></div>
-                            <div class="slide-img-produto" style="background: url('${prod.imagem_url}');"></div>
-                            <div class="oferta-tag"><i class="fa-solid fa-fire"></i> Oferta</div>
-                            <div class="slide-detalhes-produto">
-                                <h4>${prod.nome}</h4>
-                                <p>${precoFormatado}</p>
-                            </div>
-                        </div>`;
-                    });
-                    carouselWrapper.innerHTML += slidesHTML;
-                }
-                
-                initSwiper();
 
-                const container = document.getElementById('categoriesContainer');
-                if (!categorias) return;
+        // PUXA CATEGORIAS E PRODUTOS COM IMAGENS
+        const { data: categorias } = await supabasePub.from('categorias').select('*');
+        const { data: produtos } = await supabasePub
+           .from('produtos')
+           .select('id, nome, preco, categoria_id, produto_imagens(url, ordem)');
+        
+        const categoriaOfertaObjeto = categorias? categorias.find(c => c.nome_categoria.toLowerCase().trim() === NOME_CATEGORIA_OFERTAS.toLowerCase().trim()) : null;
+        
+        if (categoriaOfertaObjeto && produtos) {
+            const carouselWrapper = document.getElementById('carouselWrapper');
+            const produtosFiltradosEmOferta = produtos.filter(p => p.categoria_id === categoriaOfertaObjeto.id);
+            
+            let slidesHTML = '';
+            produtosFiltradosEmOferta.forEach(prod => {
+                const primeiraImg = prod.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url || '';
+                const precoFormatado = prod.preco? prod.preco : 'Consulte';
+                const nomeEscapado = prod.nome.replace(/'/g, "\\'");
+                const precoEscapado = precoFormatado.replace(/'/g, "\\'");
                 
-                const mapCategorias = categorias.filter(c => c.nome_categoria.toLowerCase().trim() !== NOME_CATEGORIA_OFERTAS.toLowerCase().trim());
-
-                container.innerHTML = mapCategorias.map(cat => {
-                    const prods = produtos.filter(p => p.categoria_id === cat.id);
-                    return `<div class="category-card" onclick="showCategoryProducts('${cat.id}', '${cat.nome_categoria}')">
-                                <img src="${prods[0]?.imagem_url || ''}" class="cat-img-bg">
-                                <div class="category-overlay"></div>
-                                <div class="category-info"><h3>${cat.nome_categoria}</h3></div>
-                            </div>`;
-                }).join('');
-            } catch (error) {
-                console.error("Erro geral de carregamento:", error);
-                initSwiper();
-            }
+                slidesHTML += `
+                <div class="swiper-slide" data-swiper-autoplay="6000" style="cursor:pointer;" onclick="abrirModoImersivo('${primeiraImg}', '${nomeEscapado}', '${precoEscapado}')">
+                    <div class="slide-bg-blur" style="background: url('${primeiraImg}');"></div>
+                    <div class="slide-img-produto" style="background: url('${primeiraImg}');"></div>
+                    <div class="oferta-tag"><i class="fa-solid fa-fire"></i> Oferta</div>
+                    <div class="slide-detalhes-produto">
+                        <h4>${prod.nome}</h4>
+                        <p>${precoFormatado}</p>
+                    </div>
+                </div>`;
+            });
+            carouselWrapper.innerHTML += slidesHTML;
         }
+        
+        initSwiper();
+
+        const container = document.getElementById('categoriesContainer');
+        if (!categorias) return;
+        
+        const mapCategorias = categorias.filter(c => c.nome_categoria.toLowerCase().trim()!== NOME_CATEGORIA_OFERTAS.toLowerCase().trim());
+
+        container.innerHTML = mapCategorias.map(cat => {
+            const prods = produtos.filter(p => p.categoria_id === cat.id);
+            const primeiraImgCat = prods[0]?.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url || '';
+            return `<div class="category-card" onclick="showCategoryProducts('${cat.id}', '${cat.nome_categoria}')">
+                        <img src="${primeiraImgCat}" class="cat-img-bg">
+                        <div class="category-overlay"></div>
+                        <div class="category-info"><h3>${cat.nome_categoria}</h3></div>
+                    </div>`;
+        }).join('');
+    } catch (error) {
+        console.error("Erro geral de carregamento:", error);
+        initSwiper();
+    }
+}
 
         function showCategoryProducts(id, nome) {
             document.getElementById('telaCategorias').style.display = 'none';
@@ -337,40 +391,45 @@ body { background-color: var(--cor-fundo); color: #f8fafc; }
         });
 
         async function renderProdutos(catId) {
-            try {
-                const { data: produtos } = await supabasePub.from('produtos').select('*').eq('categoria_id', catId);
-                const grid = document.getElementById('publicProductsGrid');
-                
-                if(!produtos || produtos.length === 0) {
-                    grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#94a3b8;">Nenhum produto cadastrado aqui ainda.</div>`;
-                    return;
-                }
-
-                grid.innerHTML = produtos.map(item => {
-                    const precoFormatado = item.preco ? item.preco : 'Consulte';
-                    const nomeEscapado = item.nome.replace(/'/g, "\\'");
-                    const precoEscapado = precoFormatado.replace(/'/g, "\\'");
-
-                    return `
-                    <div class="product-card">
-                        <div class="img-container" onclick="abrirModoImersivo('${item.imagem_url}', '${nomeEscapado}', '${precoEscapado}')">
-                            <img src="${item.imagem_url}" class="product-img" alt="${item.nome}">
-                        </div>
-                        <div class="product-info">
-                            <h3>${item.nome}</h3>
-                            <div class="product-footer">
-                                <span>${precoFormatado}</span>
-                                <a href="https://wa.me/${whatsappVendedor}?text=Olá! Tenho interesse no produto: ${item.nome}" target="_blank" class="btn-whatsapp">
-                                    <i class="fa-brands fa-whatsapp"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>`;
-                }).join('');
-            } catch (error) {
-                console.error("Erro ao renderizar produtos:", error);
-            }
+    try {
+        const { data: produtos } = await supabasePub
+           .from('produtos')
+           .select('id, nome, preco, produto_imagens(url, ordem)')
+           .eq('categoria_id', catId);
+            
+        const grid = document.getElementById('publicProductsGrid');
+        
+        if(!produtos || produtos.length === 0) {
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#94a3b8;">Nenhum produto cadastrado aqui ainda.</div>`;
+            return;
         }
+
+        grid.innerHTML = produtos.map(item => {
+            const primeiraImg = item.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url || 'https://via.placeholder.com/300';
+            const precoFormatado = item.preco? item.preco : 'Consulte';
+            const nomeEscapado = item.nome.replace(/'/g, "\\'");
+            const precoEscapado = precoFormatado.replace(/'/g, "\\'");
+
+            return `
+            <div class="product-card">
+                <div class="img-container" onclick="abrirModoImersivo('${primeiraImg}', '${nomeEscapado}', '${precoEscapado}')">
+                    <img src="${primeiraImg}" class="product-img" alt="${item.nome}">
+                </div>
+                <div class="product-info">
+                    <h3>${item.nome}</h3>
+                    <div class="product-footer">
+                        <span>${precoFormatado}</span>
+                        <button class="btn-carrinho-add" onclick="addCarrinho(${item.id}, '${nomeEscapado}', '${precoEscapado}', '${primeiraImg}')">
+                            <i class="fa-solid fa-plus"></i> Carrinho
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    } catch (error) {
+        console.error("Erro ao renderizar produtos:", error);
+    }
+}
 
         function abrirModoImersivo(url, nome, preco) {
             document.getElementById('imagemAmpliada').src = url;
@@ -382,7 +441,43 @@ body { background-color: var(--cor-fundo); color: #f8fafc; }
         function fecharModoImersivo() { 
             document.getElementById('telaCheiaOverlay').classList.remove('ativo'); 
         }
+// ===== SISTEMA CARRINHO =====
+let carrinho = JSON.parse(localStorage.getItem('carrinhoSP')) || [];
 
+function addCarrinho(id, nome, preco, img) {
+    const itemExistente = carrinho.find(i => i.id === id);
+    if (itemExistente) {
+        itemExistente.qtd++;
+    } else {
+        carrinho.push({ id, nome, preco, img, qtd: 1 });
+    }
+    salvarCarrinho();
+    
+    // Feedback visual
+    document.getElementById('btnCarrinho').style.display = 'flex';
+    document.getElementById('btnCarrinho').style.transform = 'scale(1.2)';
+    setTimeout(() => {
+        document.getElementById('btnCarrinho').style.transform = 'scale(1)';
+    }, 200);
+}
+
+function salvarCarrinho() {
+    localStorage.setItem('carrinhoSP', JSON.stringify(carrinho));
+    atualizarContador();
+}
+
+function atualizarContador() {
+    const total = carrinho.reduce((sum, item) => sum + item.qtd, 0);
+    document.getElementById('contadorCarrinho').innerText = total;
+    document.getElementById('btnCarrinho').style.display = total > 0 ? 'flex' : 'none';
+}
+
+function abrirCarrinho() {
+    alert('Tela do carrinho vem no próximo passo!');
+}
+
+// Carrega contador ao abrir página
+document.addEventListener('DOMContentLoaded', atualizarContador);
         loadShowcase();
     </script>
 </body>
