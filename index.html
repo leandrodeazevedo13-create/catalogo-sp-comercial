@@ -617,6 +617,11 @@ function finalizarWhatsApp() {
     salvarCarrinho();
     fecharCarrinho();
 }
+    // INICIA TUDO QUANDO A PÁGINA CARREGA
+document.addEventListener('DOMContentLoaded', () => {
+    loadShowcase();
+    atualizarContador(); // Mostra o carrinho se já tiver item
+});
     </script>
     <div class="modal-carrinho" id="modalCarrinho">
     <div class="carrinho-card">
