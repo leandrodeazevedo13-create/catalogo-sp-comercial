@@ -411,18 +411,17 @@
 
      let urlImg = 'https://via.placeholder.com/400x200?text=' + encodeURIComponent(cat.nome_categoria);
 
-     if (produtoComFoto) {
-        // PRIORIDADE 1: produto_imagens do Storage
-        if (produtoComFoto.produto_imagens?.length > 0) {
-            const arquivo = produtoComFoto.produto_imagens.sort((a,b) => a.ordem - b.ordem)[0].url;
-            urlImg = supabasePub.storage.from('PRODUTOS').getPublicUrl(arquivo).data.publicUrl;
-         }
-        // PRIORIDADE 2: imagem_url antiga
-         else if (produtoComFoto.imagem_url) {
-            urlImg = produtoComFoto.imagem_url;
-         }
-     }
-
+if (produtoComFoto) {
+    // PRIORIDADE 1: produto_imagens do Storage
+    if (produtoComFoto.produto_imagens?.length > 0) {
+        const arquivo = produtoComFoto.produto_imagens.sort((a,b) => a.ordem - b.ordem)[0].url;
+        urlImg = arquivo.startsWith('http')? arquivo : supabasePub.storage.from('PRODUTOS').getPublicUrl(arquivo).data.publicUrl;
+    }
+    // PRIORIDADE 2: imagem_url antiga
+    else if (produtoComFoto.imagem_url) {
+        urlImg = produtoComFoto.imagem_url;
+    }
+}
      return `<div class="category-card" onclick="showCategoryProducts('${cat.id}', '${cat.nome_categoria}')">
                 <img src="${urlImg}" class="cat-img-bg" onerror="this.src='https://via.placeholder.com/400x200?text=Sem+Foto'">
                 <div class="category-overlay"></div>
@@ -479,10 +478,14 @@ function showCategoryProducts(id, nome) {
         }
 
         grid.innerHTML = produtos.map(item => {
-           const arquivoImg = item.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url;
-const primeiraImg = item.produto_imagens?.length > 0
-  ? supabasePub.storage.from('PRODUTOS').getPublicUrl(item.produto_imagens.sort((a,b) => a.ordem - b.ordem)[0].url).data.publicUrl
-   : item.imagem_url || 'https://via.placeholder.com/300x300?text=Sem+Imagem';
+          
+const primeiraImg = (() => {
+    const img = item.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url;
+    if (!img) return item.imagem_url || 'https://via.placeholder.com/300x300?text=Sem+Imagem';
+
+    // Se já é URL completa, usa direto. Se for só o path, monta a URL
+    return img.startsWith('http')? img : supabasePub.storage.from('PRODUTOS').getPublicUrl(img).data.publicUrl;
+})();
             const precoFormatado = item.preco || 'Consulte';
             const nomeEscapado = item.nome.replace(/'/g, "\\'");
             const precoEscapado = precoFormatado.replace(/'/g, "\\'");
