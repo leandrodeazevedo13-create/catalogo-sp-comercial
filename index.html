@@ -402,16 +402,24 @@
         const mapCategorias = categorias.filter(c => c.nome_categoria.toLowerCase().trim()!== NOME_CATEGORIA_OFERTAS.toLowerCase().trim());
 
         container.innerHTML = mapCategorias.map(cat => {
-            const prods = produtos?.filter(p => p.categoria_id === cat.id) || [];
-            const arquivoImgCat = prods[0]?.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url;
-            const primeiraImgCat = arquivoImgCat
-                 ? supabasePub.storage.from('PRODUTOS').getPublicUrl(arquivoImgCat).data.publicUrl
-                     : 'https://via.placeholder.com/400x200';
-                    return `<div class="category-card" onclick="showCategoryProducts('${cat.id}', '${cat.nome_categoria}')">
-                        <img src="${primeiraImgCat}" class="cat-img-bg">
-                        <div class="category-overlay"></div>
-                        <div class="category-info"><h3>${cat.nome_categoria}</h3></div>
-                    </div>`;
+    // PEGA SÓ PRODUTO COM FOTO
+     const prodsComFoto = produtos?.filter(p =>
+        p.categoria_id === cat.id &&
+        p.produto_imagens &&
+        p.produto_imagens.length > 0
+     ) || [];
+
+     const arquivoImgCat = prodsComFoto[0]?.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url;
+
+     const primeiraImgCat = arquivoImgCat
+       ? supabasePub.storage.from('PRODUTOS').getPublicUrl(arquivoImgCat).data.publicUrl
+        : 'https://via.placeholder.com/400x200?text=' + encodeURIComponent(cat.nome_categoria);
+
+     return `<div class="category-card" onclick="showCategoryProducts('${cat.id}', '${cat.nome_categoria}')">
+                <img src="${primeiraImgCat}" class="cat-img-bg" onerror="this.src='https://via.placeholder.com/400x200?text=Sem+Foto'">
+                <div class="category-overlay"></div>
+                <div class="category-info"><h3>${cat.nome_categoria}</h3></div>
+            </div>`;
         }).join('');
     } catch (error) {
         console.error("Erro geral de carregamento:", error);
