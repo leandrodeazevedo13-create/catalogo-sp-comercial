@@ -415,6 +415,16 @@
         document.getElementById('categoriesContainer').innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#ef4444;">Erro ao carregar. Verifique as policies do Supabase.</div>`;
         initSwiper();
     }
+} 
+
+function showCategoryProducts(id, nome) {
+    document.getElementById('telaCategorias').style.display = 'none';
+    document.getElementById('productsDisplaySection').style.display = 'block';
+    document.getElementById('btnVoltarFixo').style.display = 'block';
+    document.getElementById('selectedCategoryTitle').innerText = nome;
+    historicoTelas.push('produtos');
+    history.pushState({tela: 'produtos'}, '', '#produtos');
+    renderProdutos(id);
 }
 
         function voltarCategorias() {
@@ -435,10 +445,15 @@
 
        async function renderProdutos(catId) {
     try {
-        const { data: produtos } = await supabasePub
-       .from('produtos')
-       .select('id, nome, preco, produto_imagens(url, ordem)')
-       .eq('categoria_id', catId);
+        const { data: produtos, error: errProd } = await supabasePub
+.from('produtos')
+.select('id, nome, preco, categoria_id, produto_imagens(url, ordem)');
+
+if (errProd) console.error('Erro ao buscar produtos:', errProd);
+if (!produtos || produtos.length === 0) {
+console.warn('Nenhum produto encontrado. Verifica se tem produto cadastrado e se RLS tá liberado.');
+}
+.eq('categoria_id', catId);
 
         const grid = document.getElementById('publicProductsGrid');
 
