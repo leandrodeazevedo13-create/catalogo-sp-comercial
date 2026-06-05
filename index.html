@@ -433,46 +433,24 @@
             }
         });
 
-        async function renderProdutos(catId) {
-            try {
-                const { data: produtos } = await supabasePub
-                  .from('produtos')
-                  .select('id, nome, preco, produto_imagens(url, ordem)')
-                  .eq('categoria_id', catId);
+       async function renderProdutos(catId) {
+    try {
+        const { data: produtos } = await supabasePub
+        .from('produtos')
+        .select('id, nome, preco, produto_imagens(url, ordem)')
+        .eq('categoria_id', catId);
 
-                const grid = document.getElementById('publicProductsGrid');
+        const grid = document.getElementById('publicProductsGrid');
 
-                if(!produtos || produtos.length === 0) {
-                    grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#94a3b8;">Nenhum produto cadastrado aqui ainda.</div>`;
-                    return;
-                }
-
-                grid.innerHTML = produtos.map(item => {
-                    const primeiraImg = item.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url || 'https://via.placeholder.com/300';
-                    const precoFormatado = item.preco? item.preco : 'Consulte';
-                    const nomeEscapado = item.nome.replace(/'/g, "\\'");
-                    const precoEscapado = precoFormatado.replace(/'/g, "\\'");
-
-                    return `
-                    <div class="product-card">
-                        <div class="img-container" onclick="abrirModoImersivo('${primeiraImg}', '${nomeEscapado}', '${precoEscapado}')">
-                            <img src="${primeiraImg}" class="product-img" alt="${item.nome}">
-                        </div>
-                        <div class="product-info">
-                            <h3>${item.nome}</h3>
-                            <div class="product-footer">
-                                <span>${precoFormatado}</span>
-                                <button class="btn-carrinho-add" onclick="addCarrinho(${item.id}, '${nomeEscapado}', '${precoEscapado}', '${primeiraImg}')">
-                                    <i class="fa-solid fa-plus"></i> Carrinho
-                                </button>
-                            </div>
-                        </div>
-                    </div>`;
-                }).join('');
-            } catch (error) {
-                console.error("Erro ao renderizar produtos:", error);
-            }
+        if(!produtos || produtos.length === 0) {
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#94a3b8;">Nenhum produto cadastrado aqui ainda.</div>`;
+            return;
         }
+
+        grid.innerHTML = produtos.map(item => {
+            const primeiraImg = item.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url || 'https://via.placeholder.com/300x300?text=Sem+Imagem';
+            const precoFormatado = item.preco || 'Consulte';
+            const nomeEscap
 
         function abrirModoImersivo(url, nome, preco) {
             document.getElementById('imagemAmpliada').src = url;
