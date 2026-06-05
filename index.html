@@ -354,6 +354,9 @@
         const { data: produtos, error: errProd } = await supabasePub
          .from('produtos')
          .select('id, nome, preco, categoria_id, produto_imagens(url, ordem)');
+         console.log('Produtos:', produtos);
+         console.log('Erro produtos:', errProd);
+         console.log('Categorias:', categorias);
 
         if (errCat || errProd) {
             console.error("Erro Supabase:", errCat || errProd);
