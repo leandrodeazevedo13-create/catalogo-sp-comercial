@@ -480,9 +480,9 @@ function showCategoryProducts(id, nome) {
 
         grid.innerHTML = produtos.map(item => {
            const arquivoImg = item.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url;
-const primeiraImg = arquivoImg
-   ? supabasePub.storage.from('PRODUTOS').getPublicUrl(arquivoImg).data.publicUrl
-    : 'https://via.placeholder.com/300x300?text=Sem+Imagem';
+const primeiraImg = item.produto_imagens?.length > 0
+  ? supabasePub.storage.from('PRODUTOS').getPublicUrl(item.produto_imagens.sort((a,b) => a.ordem - b.ordem)[0].url).data.publicUrl
+   : item.imagem_url || 'https://via.placeholder.com/300x300?text=Sem+Imagem';
             const precoFormatado = item.preco || 'Consulte';
             const nomeEscapado = item.nome.replace(/'/g, "\\'");
             const precoEscapado = precoFormatado.replace(/'/g, "\\'");
