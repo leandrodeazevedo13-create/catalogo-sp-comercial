@@ -88,6 +88,7 @@
             .actions-header { flex-wrap: wrap; }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
 <body>
     <aside class="sidebar">
@@ -215,11 +216,13 @@
                 <div class="form-group"><label>MARCA</label><input type="text" id="prodMarca" placeholder="Ex: Biancogres" required></div>
                 <div class="form-group"><label>PREÇO</label><input type="text" id="prodPreco" placeholder="R$ 0,00" required></div>
                 <div class="form-group">
-                    <label id="uploadLabel">FOTOS DO PRODUTO (Pode selecionar várias)</label>
-                    <input type="file" id="prodImagemFile" accept="image/*" multiple>
-                    <div id="previewFotos" class="preview-fotos"></div>
-                    <p style="font-size: 0.75rem; color: #64748b; margin-top: 8px;">Arraste para reordenar. A primeira foto será a capa.</p>
-                </div>
+    <label>ADICIONAR MAIS FOTOS</label>
+    <input type="file" id="inputImagens" multiple accept="image/*">
+    
+    <label style="margin-top: 15px; display: block;">FOTOS DO PRODUTO</label>
+    <div id="galeriaAtual" class="preview-fotos"></div>
+    <p style="font-size: 0.75rem; color: #64748b; margin-top: 8px;">Arraste para reordenar. A primeira foto será a capa.</p>
+</div>
                 <div class="modal-actions">
                     <button type="button" class="btn-cancel" id="closeModalBtn">Cancelar</button>
                     <button type="submit" class="btn-save" id="btnSaveProduct">Salvar Produto</button>
@@ -815,6 +818,99 @@
             btn.innerText = 'Salvar Aparência';
             btn.disabled = false;
         });
+        // ===== GALERIA COM DRAG AND DROP =====
+let produtoEditandoId = null;
+let sortableInstance = null;
+
+window.openEditModal = async function(id) {
+    produtoEditandoId = id;
+    try {
+        const { data: produto } = await supabaseDash.from('produtos').select('*').eq('id', id).single();
+        await fetchCategories();
+
+        editProductId.value = produto.id;
+        document.getElementById('prodNome').value = produto.nome;
+        document.getElementById('prodMarca').value = produto.marca;
+        document.getElementById('prodPreco').value = produto.preco;
+        prodCategoriaSelect.value = produto.categoria_id || "";
+
+        await carregarGaleria(produto.id);
+        
+        if (sortableInstance) sortableInstance.destroy();
+        const el = document.getElementById('galeriaAtual');
+        sortableInstance = new Sortable(el, {
+            animation: 150,
+            onEnd: salvarNovaOrdem
+        });
+
+        modalTitle.innerText = "Editar Produto";
+        btnSaveProduct.innerText = "Atualizar Produto";
+        productModal.classList.add('active');
+    } catch (err) {
+        alert("Erro: " + err.message);
+    }
+}
+
+async function carregarGaleria(produtoId) {
+    const { data: imgs } = await supabaseDash
+      .from('produto_imagens')
+      .select('*')
+      .eq('produto_id', produtoId)
+      .order('ordem');
+
+    document.getElementById('galeriaAtual').innerHTML = imgs.map(img => `
+        <div class="preview-item existente" data-id="${img.id}">
+            <div class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></div>
+            <img src="${img.url}">
+            <button type="button" class="btn-remove" onclick="deletarImagem(${img.id})">×</button>
+        </div>
+    `).join('');
+}
+
+async function salvarNovaOrdem() {
+    const items = document.querySelectorAll('#galeriaAtual > div');
+    const updates = Array.from(items).map((el, index) => ({
+        id: parseInt(el.dataset.id),
+        ordem: index
+    }));
+    await supabaseDash.from('produto_imagens').upsert(updates);
+}
+
+document.getElementById('inputImagens').addEventListener('change', async (e) => {
+    const files = e.target.files;
+    if (!files.length ||!produtoEditandoId) return;
+
+    const { data: existentes } = await supabaseDash
+      .from('produto_imagens')
+      .select('ordem')
+      .eq('produto_id', produtoEditandoId)
+      .order('ordem', { ascending: false })
+      .limit(1);
+
+    let proximaOrdem = existentes?.length? existentes[0].ordem + 1 : 0;
+
+    for (const file of files) {
+        const nomeArq = `produtos/${Date.now()}-${file.name}`;
+        await supabaseDash.storage.from('PRODUTOS').upload(nomeArq, file);
+        const { data } = supabaseDash.storage.from('PRODUTOS').getPublicUrl(nomeArq);
+        
+        await supabaseDash.from('produto_imagens').insert({
+            produto_id: produtoEditandoId,
+            url: data.publicUrl,
+            ordem: proximaOrdem++
+        });
+    }
+    
+    e.target.value = '';
+    await carregarGaleria(produtoEditandoId);
+});
+
+window.deletarImagem = async function(id) {
+    if (!confirm('Deletar essa imagem?')) return;
+    await supabaseDash.from('produto_imagens').delete().eq('id', id);
+    await carregarGaleria(produtoEditandoId);
+}
+// ===== FIM GALERIA =====
     </script>
 </body>
 </html>
