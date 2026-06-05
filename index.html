@@ -9,49 +9,46 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
- :root {
-    --cor-primaria: #deff9a;
-    --cor-fundo: #020617;
-}
-body { background-color: var(--cor-fundo); color: #f8fafc; }
-        
-        /* CORREÇÃO DO TOPO: Espaçamento ideal para o logo aparecer perfeito */
-        header { 
-            background: rgba(15, 23, 42, 0.95); 
-            border-bottom: 1px solid #1e293b; 
-            padding: 10px 0; 
-            position: sticky; 
-            top: 0; 
-            z-index: 50; 
-            backdrop-filter: blur(8px); 
+        :root {
+            --cor-primaria: #deff9a;
+            --cor-fundo: #020617;
         }
-        .header-container { 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+        body { background-color: var(--cor-fundo); color: #f8fafc; }
+
+        header {
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 1px solid #1e293b;
+            padding: 10px 0;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(8px);
         }
-        /* Tamanho otimizado para o logo redondo logosp.jpg no topo */
-        .logo-img { 
-            height: 70px; 
-            width: auto; 
-            object-fit: contain; 
+       .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+       .logo-img {
+            height: 70px;
+            width: auto;
+            object-fit: contain;
             display: block;
         }
-        
+
         main { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        
-        /* Carrossel Mantendo os 180px de Altura Conforme o Layout */
-        .swiper { width: 100%; height: 180px; border-radius: 24px; margin-bottom: 35px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        
-        .swiper-slide { 
-            display: flex; 
+
+       .swiper { width: 100%; height: 180px; border-radius: 24px; margin-bottom: 35px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+
+       .swiper-slide {
+            display: flex;
             flex-direction: column;
-            align-items: center; 
-            justify-content: center; 
-            color: #fff; 
-            font-size: 1.4rem; 
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.4rem;
             font-weight: bold;
             text-align: center;
             padding: 15px;
@@ -59,38 +56,34 @@ body { background-color: var(--cor-fundo); color: #f8fafc; }
             position: relative;
             overflow: hidden;
         }
-        
-        /* Fundo padrão para as duas primeiras frases institucionais */
-        .slide-institucional {
+
+       .slide-institucional {
             background: linear-gradient(rgba(15, 23, 42, 0.6), rgba(15, 23, 42, 0.85)), url('spcomercial.jpg');
             background-size: cover;
             background-position: center;
         }
-        
-        /* Efeito de Fundo Desfocado para Enquadrar o Produto sem Cortar */
-        .slide-bg-blur {
+
+       .slide-bg-blur {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-size: cover !important;
-            background-position: center !important;
+            background-size: cover!important;
+            background-position: center!important;
             filter: blur(12px) brightness(0.4);
             z-index: 1;
         }
-        
-        /* Imagem real do produto centralizada em tamanho correto */
-        .slide-img-produto {
+
+       .slide-img-produto {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-size: contain !important;
-            background-position: center !important;
-            background-repeat: no-repeat !important;
+            background-size: contain!important;
+            background-position: center!important;
+            background-repeat: no-repeat!important;
             z-index: 2;
         }
-        
-        .swiper-slide span { font-size: 1.1rem; color: var(--cor-primaria); font-weight: normal; margin-top: 10px; letter-spacing: 1px; }
-        
-        /* Detalhes do Produto flutuando sobre o carrossel */
-        .slide-detalhes-produto {
+
+       .swiper-slide span { font-size: 1.1rem; color: var(--cor-primaria); font-weight: normal; margin-top: 10px; letter-spacing: 1px; }
+
+       .slide-detalhes-produto {
             background: rgba(2, 6, 23, 0.85);
             padding: 6px 15px;
             border-radius: 12px;
@@ -102,10 +95,10 @@ body { background-color: var(--cor-fundo); color: #f8fafc; }
             border: 1px solid #1e293b;
             z-index: 3;
         }
-        .slide-detalhes-produto h4 { font-size: 1.1rem; margin-bottom: 2px; color: #fff; text-transform: capitalize; }
-        .slide-detalhes-produto p { font-size: 1rem; color: var(--cor-primaria); font-weight: bold; }
+       .slide-detalhes-produto h4 { font-size: 1.1rem; margin-bottom: 2px; color: #fff; text-transform: capitalize; }
+       .slide-detalhes-produto p { font-size: 1rem; color: var(--cor-primaria); font-weight: bold; }
 
-        .oferta-tag {
+       .oferta-tag {
             position: absolute;
             top: 12px;
             right: 12px;
@@ -121,10 +114,9 @@ body { background-color: var(--cor-fundo); color: #f8fafc; }
             z-index: 3;
         }
 
-        .section-title { font-size: 1.5rem; color: #fff; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
-        
-        /* Botão Voltar Fixo no Polegar */
-        .btn-voltar-fixo {
+       .section-title { font-size: 1.5rem; color: #fff; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+
+       .btn-voltar-fixo {
             position: fixed;
             bottom: 25px;
             right: 25px;
@@ -141,91 +133,89 @@ body { background-color: var(--cor-fundo); color: #f8fafc; }
             font-size: 1rem;
         }
 
-        .categories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
-        .category-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; cursor: pointer; height: 200px; display: flex; align-items: flex-end; position: relative; }
-        .cat-img-bg { position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
-        .category-overlay { position: absolute; width: 100%; height: 100%; background: linear-gradient(to top, rgba(2,6,23,0.7) 0%, transparent 60%); }
-        .category-info { position: relative; padding: 25px; color: #fff; font-weight: 600; text-shadow: 0 2px 8px rgba(0,0,0,0.9); }
-        
-        #productsDisplaySection { display: none; }
-        
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 30px; }
-        .product-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; }
-        .img-container { position: relative; width: 100%; height: 240px; background: #1e293b; cursor: pointer; }
-        .product-img { width: 100%; height: 100%; object-fit: cover; }
-        .product-info { padding: 20px; }
-        .product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
-        .product-footer span { font-size: 1.25rem; font-weight: bold; color: var(--cor-primaria); }
-        .btn-whatsapp { background: #25d366; color: #fff; padding: 10px 15px; border-radius: 10px; text-decoration: none; font-weight: bold; }
-        
-        /* Modal de Visualização Imersiva */
-        .overlay-fullscreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2, 6, 23, 0.98); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
-        .overlay-fullscreen.ativo { display: flex; }
-        .foto-fullscreen { max-width: 95%; max-height: 65vh; border-radius: 16px; object-fit: contain; }
-        
-        .detalhes-fullscreen { text-align: center; margin-top: 20px; max-width: 90%; }
-        .detalhes-fullscreen h3 { font-size: 1.4rem; color: #fff; margin-bottom: 8px; }
-        .detalhes-fullscreen p { font-size: 1.3rem; color: var(--cor-primaria); font-weight: bold; }
-        
-        .bolinha-fechar { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 2.5rem; color: #94a3b8; }
-   /* CARRINHO */
-.btn-carrinho-add { 
-    background: var(--cor-primaria); 
-    color: #020617; 
-    border: none; 
-    padding: 8px 12px; 
-    border-radius: 8px; 
-    cursor: pointer; 
-    font-weight: bold;
-    font-size: 0.85rem;
-}
-.btn-carrinho-add:hover { opacity: 0.8; }
+       .categories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+       .category-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; cursor: pointer; height: 200px; display: flex; align-items: flex-end; position: relative; }
+       .cat-img-bg { position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
+       .category-overlay { position: absolute; width: 100%; height: 100%; background: linear-gradient(to top, rgba(2,6,23,0.7) 0%, transparent 60%); }
+       .category-info { position: relative; padding: 25px; color: #fff; font-weight: 600; text-shadow: 0 2px 8px rgba(0,0,0,0.9); }
 
-.carrinho-flutuante {
-    position: fixed;
-    bottom: 90px;
-    right: 25px;
-    background: var(--cor-primaria);
-    color: #020617;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    cursor: pointer;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    z-index: 99;
-    display: none;
-}
-.carrinho-contador {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #ef4444;
-    color: white;
-    font-size: 0.75rem;
-    font-weight: bold;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-   </style>
+        #productsDisplaySection { display: none; }
+
+       .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 30px; }
+       .product-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; }
+       .img-container { position: relative; width: 100%; height: 240px; background: #1e293b; cursor: pointer; }
+       .product-img { width: 100%; height: 100%; object-fit: cover; }
+       .product-info { padding: 20px; }
+       .product-info h3 { font-size: 1rem; margin-bottom: 10px; min-height: 40px; }
+       .product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+       .product-footer span { font-size: 1.25rem; font-weight: bold; color: var(--cor-primaria); }
+
+        /* CARRINHO */
+       .btn-carrinho-add {
+            background: var(--cor-primaria);
+            color: #020617;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+       .btn-carrinho-add:hover { opacity: 0.8; transform: scale(1.05); }
+
+       .carrinho-flutuante {
+            position: fixed;
+            bottom: 90px;
+            right: 25px;
+            background: var(--cor-primaria);
+            color: #020617;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 99;
+            transition: all 0.2s;
+        }
+       .carrinho-flutuante:active { transform: scale(0.9); }
+       .carrinho-contador {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+       .overlay-fullscreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2, 6, 23, 0.98); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+       .overlay-fullscreen.ativo { display: flex; }
+       .foto-fullscreen { max-width: 95%; max-height: 65vh; border-radius: 16px; object-fit: contain; }
+
+       .detalhes-fullscreen { text-align: center; margin-top: 20px; max-width: 90%; }
+       .detalhes-fullscreen h3 { font-size: 1.4rem; color: #fff; margin-bottom: 8px; }
+       .detalhes-fullscreen p { font-size: 1.3rem; color: var(--cor-primaria); font-weight: bold; }
+
+       .bolinha-fechar { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 2.5rem; color: #94a3b8; }
+    </style>
 </head>
 <body>
 
     <header>
         <div class="header-container">
-    <img src="logosp.jpg" 
-         alt="Logo SP Comercial" 
-         class="logo-img" 
-         style="display: block; max-height: 70px; width: auto;" 
-         onerror="this.onerror=null; this.src='logosp.jpeg';">
-</div>
+            <img src="logosp.jpg" alt="Logo SP Comercial" class="logo-img" onerror="this.onerror=null; this.src='logosp.jpeg';">
+        </div>
     </header>
 
     <button class="btn-voltar-fixo" id="btnVoltarFixo" onclick="voltarCategorias()">
@@ -265,20 +255,23 @@ body { background-color: var(--cor-fundo); color: #f8fafc; }
             <p id="textoAmpliadoPreco">R$ 0,00</p>
         </div>
     </div>
-<div class="carrinho-flutuante" id="btnCarrinho" onclick="abrirCarrinho()">
-    <i class="fa-solid fa-shopping-bag"></i>
-    <span class="carrinho-contador" id="contadorCarrinho">0</span>
-</div>
+
+    <div class="carrinho-flutuante" id="btnCarrinho" onclick="abrirCarrinho()">
+        <i class="fa-solid fa-shopping-bag"></i>
+        <span class="carrinho-contador" id="contadorCarrinho">0</span>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
         const supabasePub = window.supabase.createClient("https://xxxsxsernmaltunwyfaq.supabase.co", "sb_publishable_sQNMnxWafcK5iF6CCXFFXg_lhx2nTQ-");
 
-        const NOME_CATEGORIA_OFERTAS = "Ofertas"; 
+        const NOME_CATEGORIA_OFERTAS = "Ofertas";
         let swiperInstance;
         let historicoTelas = ['categorias'];
-        let whatsappVendedor = '5512997301639'; // PADRÃO - troca pelo seu número principal
+        let whatsappVendedor = '5512997301639';
         const urlParams = new URLSearchParams(window.location.search);
         const vendedorSlug = urlParams.get('v');
+
         function initSwiper() {
             swiperInstance = new Swiper(".bannerSwiper", {
                 spaceBetween: 30,
@@ -292,76 +285,76 @@ body { background-color: var(--cor-fundo); color: #f8fafc; }
         }
 
         async function loadShowcase() {
-    try {
-        // APLICA CONFIG DE APARÊNCIA DA LOJA
-        const { data: config } = await supabasePub.from('config_loja').select('*').eq('id', 1).single();
-        if (config) {
-            document.documentElement.style.setProperty('--cor-primaria', config.cor_primaria);
-            document.documentElement.style.setProperty('--cor-fundo', config.cor_fundo);
-            document.querySelector('.logo-img').src = config.logo_url;
-            document.title = config.nome_loja + ' - Catálogo';
+            try {
+                // APLICA CONFIG DE APARÊNCIA DA LOJA
+                const { data: config } = await supabasePub.from('config_loja').select('*').eq('id', 1).single();
+                if (config) {
+                    document.documentElement.style.setProperty('--cor-primaria', config.cor_primaria);
+                    document.documentElement.style.setProperty('--cor-fundo', config.cor_fundo);
+                    document.querySelector('.logo-img').src = config.logo_url;
+                    document.title = config.nome_loja + ' - Catálogo';
+                }
+
+                // SE TEM VENDEDOR NA URL, BUSCA O WHATSAPP DELE
+                if (vendedorSlug) {
+                    const { data: vendedor } = await supabasePub.from('vendedores').select('whatsapp_numero').eq('slug', vendedorSlug).single();
+                    if (vendedor?.whatsapp_numero) whatsappVendedor = vendedor.whatsapp_numero;
+                }
+
+                // PUXA CATEGORIAS E PRODUTOS COM IMAGENS
+                const { data: categorias } = await supabasePub.from('categorias').select('*');
+                const { data: produtos } = await supabasePub
+                  .from('produtos')
+                  .select('id, nome, preco, categoria_id, produto_imagens(url, ordem)');
+
+                const categoriaOfertaObjeto = categorias? categorias.find(c => c.nome_categoria.toLowerCase().trim() === NOME_CATEGORIA_OFERTAS.toLowerCase().trim()) : null;
+
+                if (categoriaOfertaObjeto && produtos) {
+                    const carouselWrapper = document.getElementById('carouselWrapper');
+                    const produtosFiltradosEmOferta = produtos.filter(p => p.categoria_id === categoriaOfertaObjeto.id);
+
+                    let slidesHTML = '';
+                    produtosFiltradosEmOferta.forEach(prod => {
+                        const primeiraImg = prod.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url || '';
+                        const precoFormatado = prod.preco? prod.preco : 'Consulte';
+                        const nomeEscapado = prod.nome.replace(/'/g, "\\'");
+                        const precoEscapado = precoFormatado.replace(/'/g, "\\'");
+
+                        slidesHTML += `
+                        <div class="swiper-slide" data-swiper-autoplay="6000" style="cursor:pointer;" onclick="abrirModoImersivo('${primeiraImg}', '${nomeEscapado}', '${precoEscapado}')">
+                            <div class="slide-bg-blur" style="background: url('${primeiraImg}');"></div>
+                            <div class="slide-img-produto" style="background: url('${primeiraImg}');"></div>
+                            <div class="oferta-tag"><i class="fa-solid fa-fire"></i> Oferta</div>
+                            <div class="slide-detalhes-produto">
+                                <h4>${prod.nome}</h4>
+                                <p>${precoFormatado}</p>
+                            </div>
+                        </div>`;
+                    });
+                    carouselWrapper.innerHTML += slidesHTML;
+                }
+
+                initSwiper();
+
+                const container = document.getElementById('categoriesContainer');
+                if (!categorias) return;
+
+                const mapCategorias = categorias.filter(c => c.nome_categoria.toLowerCase().trim()!== NOME_CATEGORIA_OFERTAS.toLowerCase().trim());
+
+                container.innerHTML = mapCategorias.map(cat => {
+                    const prods = produtos.filter(p => p.categoria_id === cat.id);
+                    const primeiraImgCat = prods[0]?.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url || '';
+                    return `<div class="category-card" onclick="showCategoryProducts('${cat.id}', '${cat.nome_categoria}')">
+                                <img src="${primeiraImgCat}" class="cat-img-bg">
+                                <div class="category-overlay"></div>
+                                <div class="category-info"><h3>${cat.nome_categoria}</h3></div>
+                            </div>`;
+                }).join('');
+            } catch (error) {
+                console.error("Erro geral de carregamento:", error);
+                initSwiper();
+            }
         }
-
-        // SE TEM VENDEDOR NA URL, BUSCA O WHATSAPP DELE
-        if (vendedorSlug) {
-            const { data: vendedor } = await supabasePub.from('vendedores').select('whatsapp_numero').eq('slug', vendedorSlug).single();
-            if (vendedor?.whatsapp_numero) whatsappVendedor = vendedor.whatsapp_numero;
-        }
-
-        // PUXA CATEGORIAS E PRODUTOS COM IMAGENS
-        const { data: categorias } = await supabasePub.from('categorias').select('*');
-        const { data: produtos } = await supabasePub
-           .from('produtos')
-           .select('id, nome, preco, categoria_id, produto_imagens(url, ordem)');
-        
-        const categoriaOfertaObjeto = categorias? categorias.find(c => c.nome_categoria.toLowerCase().trim() === NOME_CATEGORIA_OFERTAS.toLowerCase().trim()) : null;
-        
-        if (categoriaOfertaObjeto && produtos) {
-            const carouselWrapper = document.getElementById('carouselWrapper');
-            const produtosFiltradosEmOferta = produtos.filter(p => p.categoria_id === categoriaOfertaObjeto.id);
-            
-            let slidesHTML = '';
-            produtosFiltradosEmOferta.forEach(prod => {
-                const primeiraImg = prod.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url || '';
-                const precoFormatado = prod.preco? prod.preco : 'Consulte';
-                const nomeEscapado = prod.nome.replace(/'/g, "\\'");
-                const precoEscapado = precoFormatado.replace(/'/g, "\\'");
-                
-                slidesHTML += `
-                <div class="swiper-slide" data-swiper-autoplay="6000" style="cursor:pointer;" onclick="abrirModoImersivo('${primeiraImg}', '${nomeEscapado}', '${precoEscapado}')">
-                    <div class="slide-bg-blur" style="background: url('${primeiraImg}');"></div>
-                    <div class="slide-img-produto" style="background: url('${primeiraImg}');"></div>
-                    <div class="oferta-tag"><i class="fa-solid fa-fire"></i> Oferta</div>
-                    <div class="slide-detalhes-produto">
-                        <h4>${prod.nome}</h4>
-                        <p>${precoFormatado}</p>
-                    </div>
-                </div>`;
-            });
-            carouselWrapper.innerHTML += slidesHTML;
-        }
-        
-        initSwiper();
-
-        const container = document.getElementById('categoriesContainer');
-        if (!categorias) return;
-        
-        const mapCategorias = categorias.filter(c => c.nome_categoria.toLowerCase().trim()!== NOME_CATEGORIA_OFERTAS.toLowerCase().trim());
-
-        container.innerHTML = mapCategorias.map(cat => {
-            const prods = produtos.filter(p => p.categoria_id === cat.id);
-            const primeiraImgCat = prods[0]?.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url || '';
-            return `<div class="category-card" onclick="showCategoryProducts('${cat.id}', '${cat.nome_categoria}')">
-                        <img src="${primeiraImgCat}" class="cat-img-bg">
-                        <div class="category-overlay"></div>
-                        <div class="category-info"><h3>${cat.nome_categoria}</h3></div>
-                    </div>`;
-        }).join('');
-    } catch (error) {
-        console.error("Erro geral de carregamento:", error);
-        initSwiper();
-    }
-}
 
         function showCategoryProducts(id, nome) {
             document.getElementById('telaCategorias').style.display = 'none';
@@ -381,7 +374,6 @@ body { background-color: var(--cor-fundo); color: #f8fafc; }
             history.pushState({tela: 'categorias'}, '', '#categorias');
         }
 
-        // BLOQUEIA O BOTÃO VOLTAR DO CELULAR DE SAIR DA PÁGINA
         window.addEventListener('popstate', function(event) {
             if (historicoTelas.length > 1) {
                 voltarCategorias();
@@ -391,45 +383,45 @@ body { background-color: var(--cor-fundo); color: #f8fafc; }
         });
 
         async function renderProdutos(catId) {
-    try {
-        const { data: produtos } = await supabasePub
-           .from('produtos')
-           .select('id, nome, preco, produto_imagens(url, ordem)')
-           .eq('categoria_id', catId);
-            
-        const grid = document.getElementById('publicProductsGrid');
-        
-        if(!produtos || produtos.length === 0) {
-            grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#94a3b8;">Nenhum produto cadastrado aqui ainda.</div>`;
-            return;
+            try {
+                const { data: produtos } = await supabasePub
+                  .from('produtos')
+                  .select('id, nome, preco, produto_imagens(url, ordem)')
+                  .eq('categoria_id', catId);
+
+                const grid = document.getElementById('publicProductsGrid');
+
+                if(!produtos || produtos.length === 0) {
+                    grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#94a3b8;">Nenhum produto cadastrado aqui ainda.</div>`;
+                    return;
+                }
+
+                grid.innerHTML = produtos.map(item => {
+                    const primeiraImg = item.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url || 'https://via.placeholder.com/300';
+                    const precoFormatado = item.preco? item.preco : 'Consulte';
+                    const nomeEscapado = item.nome.replace(/'/g, "\\'");
+                    const precoEscapado = precoFormatado.replace(/'/g, "\\'");
+
+                    return `
+                    <div class="product-card">
+                        <div class="img-container" onclick="abrirModoImersivo('${primeiraImg}', '${nomeEscapado}', '${precoEscapado}')">
+                            <img src="${primeiraImg}" class="product-img" alt="${item.nome}">
+                        </div>
+                        <div class="product-info">
+                            <h3>${item.nome}</h3>
+                            <div class="product-footer">
+                                <span>${precoFormatado}</span>
+                                <button class="btn-carrinho-add" onclick="addCarrinho(${item.id}, '${nomeEscapado}', '${precoEscapado}', '${primeiraImg}')">
+                                    <i class="fa-solid fa-plus"></i> Carrinho
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (error) {
+                console.error("Erro ao renderizar produtos:", error);
+            }
         }
-
-        grid.innerHTML = produtos.map(item => {
-            const primeiraImg = item.produto_imagens?.sort((a,b) => a.ordem - b.ordem)[0]?.url || 'https://via.placeholder.com/300';
-            const precoFormatado = item.preco? item.preco : 'Consulte';
-            const nomeEscapado = item.nome.replace(/'/g, "\\'");
-            const precoEscapado = precoFormatado.replace(/'/g, "\\'");
-
-            return `
-            <div class="product-card">
-                <div class="img-container" onclick="abrirModoImersivo('${primeiraImg}', '${nomeEscapado}', '${precoEscapado}')">
-                    <img src="${primeiraImg}" class="product-img" alt="${item.nome}">
-                </div>
-                <div class="product-info">
-                    <h3>${item.nome}</h3>
-                    <div class="product-footer">
-                        <span>${precoFormatado}</span>
-                        <button class="btn-carrinho-add" onclick="addCarrinho(${item.id}, '${nomeEscapado}', '${precoEscapado}', '${primeiraImg}')">
-                            <i class="fa-solid fa-plus"></i> Carrinho
-                        </button>
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
-    } catch (error) {
-        console.error("Erro ao renderizar produtos:", error);
-    }
-}
 
         function abrirModoImersivo(url, nome, preco) {
             document.getElementById('imagemAmpliada').src = url;
@@ -438,46 +430,46 @@ body { background-color: var(--cor-fundo); color: #f8fafc; }
             document.getElementById('telaCheiaOverlay').classList.add('ativo');
         }
 
-        function fecharModoImersivo() { 
-            document.getElementById('telaCheiaOverlay').classList.remove('ativo'); 
+        function fecharModoImersivo() {
+            document.getElementById('telaCheiaOverlay').classList.remove('ativo');
         }
-// ===== SISTEMA CARRINHO =====
-let carrinho = JSON.parse(localStorage.getItem('carrinhoSP')) || [];
 
-function addCarrinho(id, nome, preco, img) {
-    const itemExistente = carrinho.find(i => i.id === id);
-    if (itemExistente) {
-        itemExistente.qtd++;
-    } else {
-        carrinho.push({ id, nome, preco, img, qtd: 1 });
-    }
-    salvarCarrinho();
-    
-    // Feedback visual
-    document.getElementById('btnCarrinho').style.display = 'flex';
-    document.getElementById('btnCarrinho').style.transform = 'scale(1.2)';
-    setTimeout(() => {
-        document.getElementById('btnCarrinho').style.transform = 'scale(1)';
-    }, 200);
-}
+        // ===== SISTEMA CARRINHO =====
+        let carrinho = JSON.parse(localStorage.getItem('carrinhoSP')) || [];
 
-function salvarCarrinho() {
-    localStorage.setItem('carrinhoSP', JSON.stringify(carrinho));
-    atualizarContador();
-}
+        function addCarrinho(id, nome, preco, img) {
+            const itemExistente = carrinho.find(i => i.id === id);
+            if (itemExistente) {
+                itemExistente.qtd++;
+            } else {
+                carrinho.push({ id, nome, preco, img, qtd: 1 });
+            }
+            salvarCarrinho();
 
-function atualizarContador() {
-    const total = carrinho.reduce((sum, item) => sum + item.qtd, 0);
-    document.getElementById('contadorCarrinho').innerText = total;
-    document.getElementById('btnCarrinho').style.display = total > 0 ? 'flex' : 'none';
-}
+            const btn = document.getElementById('btnCarrinho');
+            btn.style.display = 'flex';
+            btn.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                btn.style.transform = 'scale(1)';
+            }, 200);
+        }
 
-function abrirCarrinho() {
-    alert('Tela do carrinho vem no próximo passo!');
-}
+        function salvarCarrinho() {
+            localStorage.setItem('carrinhoSP', JSON.stringify(carrinho));
+            atualizarContador();
+        }
 
-// Carrega contador ao abrir página
-document.addEventListener('DOMContentLoaded', atualizarContador);
+        function atualizarContador() {
+            const total = carrinho.reduce((sum, item) => sum + item.qtd, 0);
+            document.getElementById('contadorCarrinho').innerText = total;
+            document.getElementById('btnCarrinho').style.display = total > 0? 'flex' : 'none';
+        }
+
+        function abrirCarrinho() {
+            alert('Tela do carrinho vem no próximo passo!');
+        }
+
+        document.addEventListener('DOMContentLoaded', atualizarContador);
         loadShowcase();
     </script>
 </body>
