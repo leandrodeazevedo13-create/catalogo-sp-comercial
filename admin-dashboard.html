@@ -500,6 +500,134 @@
             document.getElementById('configCorFundo').value = data.cor_fundo || '#020617';
         }
     });
+        async function fetchAdminProducts(categoriaId) {
+        try {
+            productsTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 30px;">Carregando...</td></tr>`;
+
+            let query = supabaseDash.from('produtos').select('id, nome, marca, preco, categoria_id, produto_imagens(url, ordem)');
+            if (categoriaId) {
+                query = query.eq('categoria_id', categoriaId);
+            }
+            const { data: produtos, error } = await query.order('id', { ascending: false });
+            if (error) throw error;
+
+            if (!produtos || produtos.length === 0) {
+                productsTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 30px;">Nenhum produto nesta categoria.</td></tr>`;
+                return;
+            }
+
+            productsTableBody.innerHTML = "";
+            produtos.forEach(item => {
+                const tr = document.createElement('tr');
+                const fotos = item.produto_imagens?.sort((a,b) => a.ordem - b.ordem) || [];
+                const primeiraFoto = fotos[0]?.url || 'https://via.placeholder.com/45';
+                const qtdFotos = fotos.length;
+
+                tr.innerHTML = `
+                    <td>
+                        <div style="position: relative; width: 45px; height: 45px;">
+                            <img src="${primeiraFoto}" class="product-img" alt="Foto">
+                            ${qtdFotos > 1? `<span class="badge-fotos">+${qtdFotos}</span>` : ''}
+                        </div>
+                    </td>
+                    <td><strong>${item.nome || 'Sem Nome'}</strong></td>
+                    <td>${item.marca || 'Genérico'}</td>
+                    <td style="color: #deff9a; font-weight: 600;">${item.preco || '0,00'}</td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="btn-action" onclick="openEditModal(${item.id})" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="btn-action btn-delete" onclick="deleteProduct(${item.id})" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                productsTableBody.appendChild(tr);
+            });
+        } catch (err) {
+            productsTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #f87171; padding: 30px;">Erro ao carregar.</td></tr>`;
+        }
+    }
+
+    window.openEditModal = async function(id) {
+        produtoEditandoId = id;
+        try {
+            const { data: produto, error } = await supabaseDash.from('produtos').select('*').eq('id', id).single();
+            if (error) throw error;
+            await fetchCategories();
+
+            editProductId.value = produto.id;
+            document.getElementById('prodNome').value = produto.nome;
+            document.getElementById('prodMarca').value = produto.marca;
+            document.getElementById('prodPreco').value = produto.preco;
+            prodCategoriaSelect.value = produto.categoria_id || "";
+
+            await carregarGaleria(produto.id);
+
+            modalTitle.innerText = "Editar Produto";
+            btnSaveProduct.innerText = "Atualizar Produto";
+            productModal.classList.add('active');
+
+            setTimeout(() => {
+                if (sortableInstance) sortableInstance.destroy();
+                const el = document.getElementById('galeriaAtual');
+                if (el) {
+                    sortableInstance = new Sortable(el, {
+                        animation: 150,
+                        handle: '.drag-handle',
+                        onEnd: salvarNovaOrdem
+                    });
+                }
+            }, 100);
+        } catch (err) {
+            alert("Erro ao carregar produto: " + err.message);
+        }
+    }
+
+    async function carregarGaleria(produtoId) {
+        const { data: imgs } = await supabaseDash
+      .from('produto_imagens')
+      .select('*')
+      .eq('produto_id', produtoId)
+      .order('ordem');
+
+        document.getElementById('galeriaAtual').innerHTML = imgs.map(img => `
+            <div class="preview-item existente" data-id="${img.id}">
+                <div class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></div>
+                <img src="${img.url}">
+                <button type="button" class="btn-remove" onclick="deletarImagem(${img.id})">×</button>
+            </div>
+        `).join('');
+    }
+
+    async function salvarNovaOrdem() {
+        const items = document.querySelectorAll('#galeriaAtual > div');
+        const updates = Array.from(items).map((el, index) => ({
+            id: parseInt(el.dataset.id),
+            ordem: index
+        }));
+        await supabaseDash.from('produto_imagens').upsert(updates);
+    }
+
+    window.deletarImagem = async function(id) {
+        if (!confirm('Deletar essa imagem?')) return;
+        await supabaseDash.from('produto_imagens').delete().eq('id', id);
+        await carregarGaleria(produtoEditandoId);
+    }
+
+    window.deleteProduct = async function(id) {
+        if (!confirm("Tem certeza que deseja excluir este produto? Isso apagará todas as fotos.")) return;
+        try {
+            const { error } = await supabaseDash.from('produtos').delete().eq('id', id);
+            if (error) throw error;
+            alert("Produto excluído com sucesso!");
+            if (categoriaAtualId) {
+                await fetchAdminProducts(categoriaAtualId);
+            } else {
+                await fetchCategoriasGrid();
+            }
+        } catch (err) {
+            alert("Erro ao excluir produto: " + err.message);
+        }
+    }
         aparenciaForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button[type="submit"]');
