@@ -72,7 +72,6 @@
         .preview-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid #1e293b; }
         .preview-item.existente img { border-color: #deff9a; }
         .preview-item .btn-remove { position: absolute; top: -8px; right: -8px; background: #ef4444; border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 14px; line-height: 1; }
-        .preview-item .badge-nova { position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.7); color: #deff9a; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
         .drag-handle { position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.7); color: #fff; width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: grab; font-size: 12px; }
         .badge-fotos { position: absolute; bottom: -5px; right: -5px; background: #deff9a; color: #000; font-size: 10px; font-weight: bold; padding: 2px 5px; border-radius: 10px; }
         @media (max-width: 768px) {
@@ -88,7 +87,6 @@
             .actions-header { flex-wrap: wrap; }
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
 <body>
     <aside class="sidebar">
@@ -202,8 +200,7 @@
     </section>
 </div>
     </main>
-
-    <div class="modal-overlay" id="productModal">
+        <div class="modal-overlay" id="productModal">
         <div class="modal-card">
             <div class="modal-header">
                 <h2 id="modalTitle">Adicionar Novo Produto</h2>
@@ -216,13 +213,13 @@
                 <div class="form-group"><label>MARCA</label><input type="text" id="prodMarca" placeholder="Ex: Biancogres" required></div>
                 <div class="form-group"><label>PREÇO</label><input type="text" id="prodPreco" placeholder="R$ 0,00" required></div>
                 <div class="form-group">
-    <label>ADICIONAR MAIS FOTOS</label>
-    <input type="file" id="inputImagens" multiple accept="image/*">
-    
-    <label style="margin-top: 15px; display: block;">FOTOS DO PRODUTO</label>
-    <div id="galeriaAtual" class="preview-fotos"></div>
-    <p style="font-size: 0.75rem; color: #64748b; margin-top: 8px;">Arraste para reordenar. A primeira foto será a capa.</p>
-</div>
+                    <label>ADICIONAR MAIS FOTOS</label>
+                    <input type="file" id="inputImagens" multiple accept="image/*">
+                    
+                    <label style="margin-top: 15px; display: block;">FOTOS DO PRODUTO</label>
+                    <div id="galeriaAtual" class="preview-fotos"></div>
+                    <p style="font-size: 0.75rem; color: #64748b; margin-top: 8px;">Arraste para reordenar. A primeira foto será a capa.</p>
+                </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-cancel" id="closeModalBtn">Cancelar</button>
                     <button type="submit" class="btn-save" id="btnSaveProduct">Salvar Produto</button>
@@ -266,6 +263,8 @@
         const SUPABASE_URL_DASH = "https://xxxsxsernmaltunwyfaq.supabase.co";
         const SUPABASE_KEY_DASH = "sb_publishable_sQNMnxWafcK5iF6CCXFFXg_lhx2nTQ-";
         const supabaseDash = window.supabase.createClient(SUPABASE_URL_DASH, SUPABASE_KEY_DASH);
+        let produtoEditandoId = null;
+        let sortableInstance = null;
         const userEmailSpan = document.getElementById('userEmail');
         const logoutBtn = document.getElementById('logoutBtn');
         const productsTableBody = document.getElementById('productsTableBody');
@@ -284,10 +283,6 @@
         const prodCategoriaSelect = document.getElementById('prodCategoria');
         const modalTitle = document.getElementById('modalTitle');
         const editProductId = document.getElementById('editProductId');
-        const prodImagemFileInput = document.getElementById('prodImagemFile');
-        const uploadLabel = document.getElementById('uploadLabel');
-        const previewFotos = document.getElementById('previewFotos');
-
         const categoryModal = document.getElementById('categoryModal');
         const openCategoryModalBtn = document.getElementById('openCategoryModalBtn');
         const closeCatModalX = document.getElementById('closeCatModalX');
@@ -303,10 +298,7 @@
         const abaRelatorios = document.getElementById('conteudo-relatorios');
         const abaConfig = document.getElementById('conteudo-config');
         const abaAparencia = document.getElementById('conteudo-aparencia');
-        const aparenciaForm = document.getElementById('aparenciaForm');
-
-        let fotosExistentes = [];
-        let sortableInstance = null;
+        const aparenciaForm = document.getElementById('aparenciaForm');         
         let linkPersonalizado = '';
         let slugVendedor = '';
         const btnVerCatalogo = document.getElementById('btnVerCatalogo');
@@ -330,117 +322,8 @@
         btnProdutos.addEventListener('click', () => alternarAba(abaProdutos, btnProdutos));
         btnRelatorios.addEventListener('click', () => alternarAba(abaRelatorios, btnRelatorios));
         btnConfig.addEventListener('click', () => alternarAba(abaConfig, btnConfig));
-
-        openModalBtn.addEventListener('click', async () => {
-            modalTitle.innerText = "Adicionar Novo Produto";
-            btnSaveProduct.innerText = "Salvar Produto";
-            editProductId.value = "";
-            prodImagemFileInput.required = true;
-            uploadLabel.innerText = "FOTOS DO PRODUTO (Pode selecionar várias)";
-            productForm.reset();
-            fotosExistentes = [];
-            previewFotos.innerHTML = '';
-            productModal.classList.add('active');
-            await fetchCategories();
-        });
-
-        const fecharModal = () => {
-            productModal.classList.remove('active');
-            productForm.reset();
-            fotosExistentes = [];
-            previewFotos.innerHTML = '';
-            if (sortableInstance) sortableInstance.destroy();
-        };
-        closeModalX.addEventListener('click', fecharModal);
-        closeModalBtn.addEventListener('click', fecharModal);
-
-        openCategoryModalBtn.addEventListener('click', () => categoryModal.classList.add('active'));
-        const fecharCatModal = () => { categoryModal.classList.remove('active'); categoryForm.reset(); };
-        closeCatModalX.addEventListener('click', fecharCatModal);
-        closeCatModalBtn.addEventListener('click', fecharCatModal);
-
-        filtroCategoriaSelect.addEventListener('change', (e) => {
-            fetchAdminProducts(e.target.value);
-        });
-
-        prodPrecoInput.addEventListener('input', (e) => {
-            let value = e.target.value.replace(/\D/g, "");
-            if (value === "") { e.target.value = ""; return; }
-            let numericValue = (parseFloat(value) / 100).toFixed(2);
-            let formattedValue = numericValue.replace(".", ",").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-            const categoriaTexto = prodCategoriaSelect.options[prodCategoriaSelect.selectedIndex]?.text.toLowerCase() || '';
-            if (categoriaTexto.includes('piso')) {
-                e.target.value = `R$ ${formattedValue}/m²`;
-            } else {
-                e.target.value = `R$ ${formattedValue}`;
-            }
-        });
-
-        prodCategoriaSelect.addEventListener('change', () => {
-            prodPrecoInput.dispatchEvent(new Event('input'));
-        });
-
-        prodImagemFileInput.addEventListener('change', (e) => {
-            atualizarPreviewFotos(Array.from(e.target.files), false);
-        });
-
-        function atualizarPreviewFotos(novasFiles = [], manterExistentes = true) {
-            if (!manterExistentes) previewFotos.innerHTML = '';
-
-            if (manterExistentes) {
-                fotosExistentes.forEach((url, index) => {
-                    if (!document.querySelector(`[data-url="${url}"]`)) {
-                        const div = document.createElement('div');
-                        div.className = 'preview-item existente';
-                        div.setAttribute('data-url', url);
-                        div.setAttribute('data-index', index);
-                        div.innerHTML = `
-                            <div class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></div>
-                            <img src="${url}">
-                            <button type="button" class="btn-remove" onclick="removerFotoExistente(${index})">×</button>
-                        `;
-                        previewFotos.appendChild(div);
-                    }
-                });
-            }
-
-            novasFiles.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const div = document.createElement('div');
-                    div.className = 'preview-item';
-                    div.setAttribute('data-file-index', index);
-                    div.innerHTML = `
-                        <img src="${e.target.result}">
-                        <span class="badge-nova">Nova</span>
-                    `;
-                    previewFotos.appendChild(div);
-                }
-                reader.readAsDataURL(file);
-            });
-
-            setTimeout(() => {
-                if (sortableInstance) sortableInstance.destroy();
-                sortableInstance = Sortable.create(previewFotos, {
-                    handle: '.drag-handle',
-                    animation: 150,
-                    onEnd: () => {
-                        const novaOrdem = [];
-                        previewFotos.querySelectorAll('.preview-item.existente').forEach(item => {
-                            novaOrdem.push(item.getAttribute('data-url'));
-                        });
-                        fotosExistentes = novaOrdem;
-                    }
-                });
-            }, 100);
-        }
-
-        window.removerFotoExistente = function(index) {
-            fotosExistentes.splice(index, 1);
-            atualizarPreviewFotos([], true);
-        }
-
-        async function checkUserSession() {
+        btnAparencia.addEventListener('click', () => alternarAba(abaAparencia, btnAparencia));
+                async function checkUserSession() {
             const { data: { session }, error } = await supabaseDash.auth.getSession();
             if (error ||!session) {
                 window.location.href = "admin-login.html";
@@ -598,14 +481,11 @@
             }
         }
 
+        // ===== GALERIA DRAG DROP - ÚNICA VERSÃO =====
         window.openEditModal = async function(id) {
+            produtoEditandoId = id;
             try {
-                const { data: produto, error } = await supabaseDash
-                .from('produtos')
-                .select('*, produto_imagens(url, ordem)')
-                .eq('id', id)
-                .single();
-
+                const { data: produto, error } = await supabaseDash.from('produtos').select('*').eq('id', id).single();
                 if (error) throw error;
                 await fetchCategories();
 
@@ -615,139 +495,123 @@
                 document.getElementById('prodPreco').value = produto.preco;
                 prodCategoriaSelect.value = produto.categoria_id || "";
 
-                fotosExistentes = produto.produto_imagens?.sort((a,b) => a.ordem - b.ordem).map(img => img.url) || [];
-                prodImagemFileInput.required = false;
-                uploadLabel.innerText = "ADICIONAR MAIS FOTOS (Deixe em branco para manter as atuais)";
-                atualizarPreviewFotos([], true);
+                await carregarGaleria(produto.id);
+                
+                if (sortableInstance) sortableInstance.destroy();
+                const el = document.getElementById('galeriaAtual');
+                sortableInstance = new Sortable(el, {
+                    animation: 150,
+                    handle: '.drag-handle',
+                    onEnd: salvarNovaOrdem
+                });
 
-                modalTitle.innerText = "Editar Detalhes do Produto";
+                modalTitle.innerText = "Editar Produto";
                 btnSaveProduct.innerText = "Atualizar Produto";
                 productModal.classList.add('active');
             } catch (err) {
-                alert("Erro ao resgatar dados do produto: " + err.message);
+                alert("Erro ao carregar produto: " + err.message);
             }
         }
 
-        async function comprimirImagem(file, maxWidth = 1200, quality = 0.8) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
+        async function carregarGaleria(produtoId) {
+            const { data: imgs } = await supabaseDash
+             .from('produto_imagens')
+             .select('*')
+             .eq('produto_id', produtoId)
+             .order('ordem');
 
-                        if (width > maxWidth) {
-                            height = (maxWidth / width) * height;
-                            width = maxWidth;
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-
-                        canvas.toBlob((blob) => {
-                            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-                        }, 'image/jpeg', quality);
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
+            document.getElementById('galeriaAtual').innerHTML = imgs.map(img => `
+                <div class="preview-item existente" data-id="${img.id}">
+                    <div class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></div>
+                    <img src="${img.url}">
+                    <button type="button" class="btn-remove" onclick="deletarImagem(${img.id})">×</button>
+                </div>
+            `).join('');
         }
+
+        async function salvarNovaOrdem() {
+            const items = document.querySelectorAll('#galeriaAtual > div');
+            const updates = Array.from(items).map((el, index) => ({
+                id: parseInt(el.dataset.id),
+                ordem: index
+            }));
+            await supabaseDash.from('produto_imagens').upsert(updates);
+        }
+
+        document.getElementById('inputImagens').addEventListener('change', async (e) => {
+            const files = e.target.files;
+            if (!files.length ||!produtoEditandoId) return;
+
+            const { data: existentes } = await supabaseDash
+             .from('produto_imagens')
+             .select('ordem')
+             .eq('produto_id', produtoEditandoId)
+             .order('ordem', { ascending: false })
+             .limit(1);
+
+            let proximaOrdem = existentes?.length? existentes[0].ordem + 1 : 0;
+
+            for (const file of files) {
+                const nomeArq = `produtos/${produtoEditandoId}/${Date.now()}-${file.name}`;
+                await supabaseDash.storage.from('PRODUTOS').upload(nomeArq, file);
+                const { data } = supabaseDash.storage.from('PRODUTOS').getPublicUrl(nomeArq);
+                
+                await supabaseDash.from('produto_imagens').insert({
+                    produto_id: produtoEditandoId,
+                    url: data.publicUrl,
+                    ordem: proximaOrdem++
+                });
+            }
+            
+            e.target.value = '';
+            await carregarGaleria(produtoEditandoId);
+        });
+
+        window.deletarImagem = async function(id) {
+            if (!confirm('Deletar essa imagem?')) return;
+            await supabaseDash.from('produto_imagens').delete().eq('id', id);
+            await carregarGaleria(produtoEditandoId);
+        }
+
+        openModalBtn.addEventListener('click', async () => {
+            modalTitle.innerText = "Adicionar Novo Produto";
+            btnSaveProduct.innerText = "Salvar Produto";
+            editProductId.value = "";
+            produtoEditandoId = null;
+            productForm.reset();
+            document.getElementById('galeriaAtual').innerHTML = '';
+            if (sortableInstance) sortableInstance.destroy();
+            productModal.classList.add('active');
+            await fetchCategories();
+        });
+        // ===== FIM GALERIA =====
 
         productForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-
             const isEditing = editProductId.value!== "";
             btnSaveProduct.disabled = true;
+            btnSaveProduct.innerText = isEditing? "Atualizando..." : "Salvando...";
 
-            const files = prodImagemFileInput.files;
-            let urlsNovasImagens = [];
+            const dadosProduto = {
+                nome: document.getElementById('prodNome').value,
+                marca: document.getElementById('prodMarca').value,
+                preco: document.getElementById('prodPreco').value,
+                categoria_id: parseInt(prodCategoriaSelect.value) || null,
+                descricao: "Disponível para retirada ou entrega"
+            };
 
             try {
-                if (!isEditing && files.length === 0 && fotosExistentes.length === 0) {
-                    alert("Por favor, selecione pelo menos uma imagem.");
-                    btnSaveProduct.disabled = false;
-                    return;
-                }
-
-                if (files.length > 0) {
-                    btnSaveProduct.innerText = `Comprimindo e enviando ${files.length} imagem(ns)...`;
-
-                    for (let i = 0; i < files.length; i++) {
-                        const fileOriginal = files[i];
-                        const file = await comprimirImagem(fileOriginal);
-                        const fileExt = file.name.split('.').pop();
-                        const fileName = `${Date.now()}-${Math.floor(Math.random() * 1000)}.${fileExt}`;
-                        const filePath = `produtos/${fileName}`;
-
-                        const { error: uploadError } = await supabaseDash.storage.from('fotos-produtos').upload(filePath, file);
-                        if (uploadError) throw uploadError;
-
-                        const { data: { publicUrl } } = supabaseDash.storage.from('fotos-produtos').getPublicUrl(filePath);
-                        urlsNovasImagens.push(publicUrl);
-                    }
-                }
-
-                btnSaveProduct.innerText = isEditing? "Atualizando..." : "Salvando...";
-                const precoCru = document.getElementById('prodPreco').value;
-
-                const dadosProduto = {
-                    nome: document.getElementById('prodNome').value,
-                    marca: document.getElementById('prodMarca').value,
-                    preco: precoCru,
-                    categoria_id: parseInt(prodCategoriaSelect.value) || null,
-                    descricao: "Disponível para retirada ou entrega"
-                };
-
-                let produtoId;
-
                 if (isEditing) {
-                    produtoId = parseInt(editProductId.value);
-                    const { error: updateError } = await supabaseDash
-                    .from('produtos')
-                    .update(dadosProduto)
-                    .eq('id', produtoId);
-
+                    const produtoId = parseInt(editProductId.value);
+                    const { error: updateError } = await supabaseDash.from('produtos').update(dadosProduto).eq('id', produtoId);
                     if (updateError) throw updateError;
+                    alert("Produto atualizado!");
                 } else {
-                    const { data: novoProduto, error: insertError } = await supabaseDash
-                    .from('produtos')
-                    .insert([dadosProduto])
-                    .select()
-                    .single();
+                    const { data: novoProduto, error: insertError } = await supabaseDash.from('produtos').insert([dadosProduto]).select().single();
                     if (insertError) throw insertError;
-                    produtoId = novoProduto.id;
+                    produtoEditandoId = novoProduto.id;
+                    alert("Produto cadastrado! Agora adicione as fotos.");
                 }
-
-                if (isEditing) {
-                    const { data: fotosAntigas } = await supabaseDash
-                    .from('produto_imagens')
-                    .select('url')
-                    .eq('produto_id', produtoId);
-
-                    const urlsParaDeletar = fotosAntigas?.filter(f =>!fotosExistentes.includes(f.url)).map(f => f.url) || [];
-
-                    if (urlsParaDeletar.length > 0) {
-                        await supabaseDash.from('produto_imagens').delete().in('url', urlsParaDeletar);
-                    }
-                }
-
-                if (urlsNovasImagens.length > 0) {
-                    const imagensParaInserir = urlsNovasImagens.map((url, index) => ({
-                        produto_id: produtoId,
-                        url: url,
-                        ordem: fotosExistentes.length + index
-                    }));
-
-                    const { error: imgError } = await supabaseDash.from('produto_imagens').insert(imagensParaInserir);
-                    if (imgError) throw imgError;
-                }
-
-                alert(isEditing? "Produto atualizado!" : "Produto cadastrado!");
                 fecharModal();
                 await fetchAdminProducts(filtroCategoriaSelect.value);
             } catch (err) {
@@ -755,13 +619,11 @@
             } finally {
                 btnSaveProduct.innerText = "Salvar Produto";
                 btnSaveProduct.disabled = false;
-                fotosExistentes = [];
             }
         });
 
         window.deleteProduct = async function(id) {
             if (!confirm("Tem certeza que deseja excluir este produto? Isso apagará todas as fotos.")) return;
-
             try {
                 const { error } = await supabaseDash.from('produtos').delete().eq('id', id);
                 if (error) throw error;
@@ -771,6 +633,40 @@
                 alert("Erro ao excluir produto: " + err.message);
             }
         }
+
+        const fecharModal = () => {
+            productModal.classList.remove('active');
+            productForm.reset();
+            if (sortableInstance) sortableInstance.destroy();
+        };
+        closeModalX.addEventListener('click', fecharModal);
+        closeModalBtn.addEventListener('click', fecharModal);
+
+        openCategoryModalBtn.addEventListener('click', () => categoryModal.classList.add('active'));
+        const fecharCatModal = () => { categoryModal.classList.remove('active'); categoryForm.reset(); };
+        closeCatModalX.addEventListener('click', fecharCatModal);
+        closeCatModalBtn.addEventListener('click', fecharCatModal);
+
+        prodPrecoInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, "");
+            if (value === "") { e.target.value = ""; return; }
+            let numericValue = (parseFloat(value) / 100).toFixed(2);
+            let formattedValue = numericValue.replace(".", ",").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+            const categoriaTexto = prodCategoriaSelect.options[prodCategoriaSelect.selectedIndex]?.text.toLowerCase() || '';
+            if (categoriaTexto.includes('piso')) {
+                e.target.value = `R$ ${formattedValue}/m²`;
+            } else {
+                e.target.value = `R$ ${formattedValue}`;
+            }
+        });
+
+        prodCategoriaSelect.addEventListener('change', () => {
+            prodPrecoInput.dispatchEvent(new Event('input'));
+        });
+
+        filtroCategoriaSelect.addEventListener('change', (e) => {
+            fetchAdminProducts(e.target.value);
+        });
 
         logoutBtn.addEventListener('click', async () => {
             const { error } = await supabaseDash.auth.signOut();
@@ -784,8 +680,6 @@
         document.addEventListener('DOMContentLoaded', checkUserSession);
 
         // ===== ABA APARÊNCIA =====
-        btnAparencia.addEventListener('click', () => alternarAba(abaAparencia, btnAparencia));
-
         btnAparencia.addEventListener('click', async () => {
             const { data } = await supabaseDash.from('config_loja').select('*').eq('id', 1).single();
             if (data) {
@@ -818,97 +712,6 @@
             btn.innerText = 'Salvar Aparência';
             btn.disabled = false;
         });
-        // ===== GALERIA COM DRAG AND DROP =====
-   
-window.openEditModal = async function(id) {
-    produtoEditandoId = id;
-    try {
-        const { data: produto } = await supabaseDash.from('produtos').select('*').eq('id', id).single();
-        await fetchCategories();
-
-        editProductId.value = produto.id;
-        document.getElementById('prodNome').value = produto.nome;
-        document.getElementById('prodMarca').value = produto.marca;
-        document.getElementById('prodPreco').value = produto.preco;
-        prodCategoriaSelect.value = produto.categoria_id || "";
-
-        await carregarGaleria(produto.id);
-        
-        if (sortableInstance) sortableInstance.destroy();
-        const el = document.getElementById('galeriaAtual');
-        sortableInstance = new Sortable(el, {
-            animation: 150,
-            onEnd: salvarNovaOrdem
-        });
-
-        modalTitle.innerText = "Editar Produto";
-        btnSaveProduct.innerText = "Atualizar Produto";
-        productModal.classList.add('active');
-    } catch (err) {
-        alert("Erro: " + err.message);
-    }
-}
-
-async function carregarGaleria(produtoId) {
-    const { data: imgs } = await supabaseDash
-      .from('produto_imagens')
-      .select('*')
-      .eq('produto_id', produtoId)
-      .order('ordem');
-
-    document.getElementById('galeriaAtual').innerHTML = imgs.map(img => `
-        <div class="preview-item existente" data-id="${img.id}">
-            <div class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></div>
-            <img src="${img.url}">
-            <button type="button" class="btn-remove" onclick="deletarImagem(${img.id})">×</button>
-        </div>
-    `).join('');
-}
-
-async function salvarNovaOrdem() {
-    const items = document.querySelectorAll('#galeriaAtual > div');
-    const updates = Array.from(items).map((el, index) => ({
-        id: parseInt(el.dataset.id),
-        ordem: index
-    }));
-    await supabaseDash.from('produto_imagens').upsert(updates);
-}
-
-document.getElementById('inputImagens').addEventListener('change', async (e) => {
-    const files = e.target.files;
-    if (!files.length ||!produtoEditandoId) return;
-
-    const { data: existentes } = await supabaseDash
-      .from('produto_imagens')
-      .select('ordem')
-      .eq('produto_id', produtoEditandoId)
-      .order('ordem', { ascending: false })
-      .limit(1);
-
-    let proximaOrdem = existentes?.length? existentes[0].ordem + 1 : 0;
-
-    for (const file of files) {
-        const nomeArq = `produtos/${Date.now()}-${file.name}`;
-        await supabaseDash.storage.from('PRODUTOS').upload(nomeArq, file);
-        const { data } = supabaseDash.storage.from('PRODUTOS').getPublicUrl(nomeArq);
-        
-        await supabaseDash.from('produto_imagens').insert({
-            produto_id: produtoEditandoId,
-            url: data.publicUrl,
-            ordem: proximaOrdem++
-        });
-    }
-    
-    e.target.value = '';
-    await carregarGaleria(produtoEditandoId);
-});
-
-window.deletarImagem = async function(id) {
-    if (!confirm('Deletar essa imagem?')) return;
-    await supabaseDash.from('produto_imagens').delete().eq('id', id);
-    await carregarGaleria(produtoEditandoId);
-}
-// ===== FIM GALERIA =====
     </script>
 </body>
 </html>
