@@ -341,6 +341,25 @@
     btnConfig.addEventListener('click', () => alternarAba(abaConfig, btnConfig));
     btnAparencia.addEventListener('click', () => alternarAba(abaAparencia, btnAparencia));
 
+        async function fetchCategories() {
+        try {
+            const { data: categorias, error } = await supabaseDash.from('categorias').select('id, nome_categoria').order('nome_categoria', { ascending: true });
+            if (error) throw error;
+            const valorModalAtual = prodCategoriaSelect.value;
+            prodCategoriaSelect.innerHTML = '<option value="">Selecione uma categoria</option>';
+            if (!categorias || categorias.length === 0) {
+                prodCategoriaSelect.innerHTML = '<option value="">Nenhuma categoria cadastrada</option>';
+                return;
+            }
+            categorias.forEach(cat => {
+                prodCategoriaSelect.innerHTML += `<option value="${cat.id}">${cat.nome_categoria}</option>`;
+            });
+            if (valorModalAtual) prodCategoriaSelect.value = valorModalAtual;
+        } catch (err) {
+            console.error("Erro ao listar categorias:", err.message);
+        }
+    }
+    
     async function checkUserSession() {
         const { data: { session }, error } = await supabaseDash.auth.getSession();
         if (error ||!session) {
@@ -396,7 +415,7 @@
             console.error("Erro ao sincronizar métricas:", err.message);
         }
     }
-    
+
 
        async function fetchCategoriasGrid() {
         try {
