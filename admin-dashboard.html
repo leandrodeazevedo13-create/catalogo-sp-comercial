@@ -207,13 +207,13 @@
                 <input type="color" id="configCorFundo" style="height: 50px; width: 100%; cursor: pointer;">
             </div>
             <button type="submit" class="btn-save" style="margin-top: 10px;">Salvar Aparência</button>
-        </form>
-    </section>
-</div>
-    </main>
-        <div class="modal-overlay" id="productModal">
-        <div class="modal-card">
-            <div class="modal-header">
+            </form>
+             </section>
+             </div>
+             </main>
+              <div class="modal-overlay" id="productModal">
+             <div class="modal-card">
+             <div class="modal-header">
                 <h2 id="modalTitle">Adicionar Novo Produto</h2>
                 <button class="btn-close-modal" id="closeModalX"><i class="fa-solid fa-xmark"></i></button>
             </div>
@@ -270,18 +270,17 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-<script>
-    const SUPABASE_URL_DASH = "https://xxxsxsernmaltunwyfaq.supabase.co";
+<script>    const SUPABASE_URL_DASH = "https://xxxsxsernmaltunwyfaq.supabase.co";
     const SUPABASE_KEY_DASH = "sb_publishable_sQNMnxWafcK5iF6CCXFFXg_lhx2nTQ-";
     const supabaseDash = window.supabase.createClient(SUPABASE_URL_DASH, SUPABASE_KEY_DASH);
-    
+
     let produtoEditandoId = null;
     let sortableInstance = null;
     let categoriaAtualId = null;
     let categoriaAtualNome = '';
     let linkPersonalizado = '';
     let slugVendedor = '';
-    
+
     const userEmailSpan = document.getElementById('userEmail');
     const logoutBtn = document.getElementById('logoutBtn');
     const productsTableBody = document.getElementById('productsTableBody');
@@ -309,7 +308,6 @@
     const closeCatModalBtn = document.getElementById('closeCatModalBtn');
     const categoryForm = document.getElementById('categoryForm');
     const btnSaveCategory = document.getElementById('btnSaveCategory');
-
     const btnProdutos = document.getElementById('btn-aba-produtos');
     const btnRelatorios = document.getElementById('btn-aba-relatorios');
     const btnConfig = document.getElementById('btn-aba-config');
@@ -326,18 +324,6 @@
     const closeQRModalX = document.getElementById('closeQRModalX');
 
     function alternarAba(abaParaMostrar, botaoAtivo) {
-            abaProdutos.style.display = 'none';
-            abaRelatorios.style.display = 'none';
-            abaConfig.style.display = 'none';
-            abaAparencia.style.display = 'none';
-            btnProdutos.classList.remove('active');
-            btnRelatorios.classList.remove('active');
-            btnConfig.classList.remove('active');
-            btnAparencia.classList.remove('active');
-            abaParaMostrar.style.display = 'block';
-            botaoAtivo.classList.add('active');
-        }
-            function alternarAba(abaParaMostrar, botaoAtivo) {
         abaProdutos.style.display = 'none';
         abaRelatorios.style.display = 'none';
         abaConfig.style.display = 'none';
@@ -362,10 +348,8 @@
             return;
         }
         userEmailSpan.innerText = session.user.email;
-
         slugVendedor = session.user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
         linkPersonalizado = `https://catalogo-sp-comercial.vercel.app/?v=${slugVendedor}`;
-
         await fetchCategories();
         await fetchCategoriasGrid();
         await fetchMetrics();
@@ -373,18 +357,12 @@
     }
 
     function setupBotoesVendedor() {
-        btnVerCatalogo.addEventListener('click', () => {
-            window.open(linkPersonalizado, '_blank');
-        });
-
+        btnVerCatalogo.addEventListener('click', () => window.open(linkPersonalizado, '_blank'));
         btnCopiarLink.addEventListener('click', () => {
             navigator.clipboard.writeText(linkPersonalizado);
             btnCopiarLink.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!';
-            setTimeout(() => {
-                btnCopiarLink.innerHTML = '<i class="fa-solid fa-link"></i> Copiar Link';
-            }, 2000);
+            setTimeout(() => btnCopiarLink.innerHTML = '<i class="fa-solid fa-link"></i> Copiar Link', 2000);
         });
-
         btnGerarQR.addEventListener('click', () => {
             document.getElementById('qrcode').innerHTML = '';
             new QRCode(document.getElementById('qrcode'), {
@@ -397,20 +375,16 @@
             document.getElementById('linkVendedor').innerText = linkPersonalizado;
             qrModal.classList.add('active');
         });
-
         closeQRModalX.addEventListener('click', () => qrModal.classList.remove('active'));
-
         document.getElementById('btnBaixarQR').addEventListener('click', () => {
             const canvas = document.querySelector('#qrcode canvas');
-            const url = canvas.toDataURL('image/png');
             const a = document.createElement('a');
-            a.href = url;
+            a.href = canvas.toDataURL('image/png');
             a.download = `qrcode-${slugVendedor}.png`;
             a.click();
         });
     }
-
-    async function fetchMetrics() {
+        async function fetchMetrics() {
         try {
             const { data, error } = await supabaseDash.from('metricas').select('visualizacoes, cliques_whatsapp').eq('id', 1).single();
             if (error) throw error;
@@ -445,14 +419,9 @@
     async function fetchCategoriasGrid() {
         try {
             const { data: categorias, error } = await supabaseDash
-              .from('categorias')
-              .select(`
-                    id,
-                    nome_categoria,
-                    produtos(id, produto_imagens(url, ordem))
-                `)
-              .order('nome_categoria', { ascending: true });
-
+           .from('categorias')
+           .select(`id, nome_categoria, produtos(id, produto_imagens(url, ordem))`)
+           .order('nome_categoria', { ascending: true });
             if (error) throw error;
 
             if (!categorias || categorias.length === 0) {
@@ -461,6 +430,7 @@
                     <p>Nenhuma categoria cadastrada ainda.</p>
                     <p style="font-size: 0.85rem; margin-top: 8px;">Clique em "Nova Categoria" pra começar.</p>
                 </div>`;
+                totalProductsP.innerText = 0;
                 return;
             }
 
@@ -470,7 +440,6 @@
             categorias.forEach(cat => {
                 const qtdProdutos = cat.produtos?.length || 0;
                 totalItens += qtdProdutos;
-
                 let fotoCapa = 'https://via.placeholder.com/200x140/1e293b/64748b?text=Sem+Foto';
                 if (cat.produtos && cat.produtos.length > 0) {
                     const primeiroProduto = cat.produtos[0];
@@ -479,7 +448,6 @@
                         fotoCapa = imgs[0]?.url || fotoCapa;
                     }
                 }
-
                 const card = document.createElement('div');
                 card.className = 'categoria-card';
                 card.innerHTML = `
@@ -487,12 +455,10 @@
                     <div class="categoria-info">
                         <h3>${cat.nome_categoria}</h3>
                         <p>${qtdProdutos} ${qtdProdutos === 1? 'produto' : 'produtos'}</p>
-                    </div>
-                `;
+                    </div>`;
                 card.onclick = () => abrirCategoria(cat.id, cat.nome_categoria);
                 categoriasGrid.appendChild(card);
             });
-
             totalProductsP.innerText = totalItens;
         } catch (err) {
             categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #f87171; padding: 40px;">Erro ao carregar categorias.</div>`;
@@ -521,518 +487,45 @@
 
     logoutBtn.addEventListener('click', async () => {
         const { error } = await supabaseDash.auth.signOut();
-        if (error) {
-            alert("Erro ao sair: " + error.message);
-        } else {
-            window.location.href = "admin-login.html";
+        if (error) alert("Erro ao sair: " + error.message);
+        else window.location.href = "admin-login.html";
+    });
+
+    btnAparencia.addEventListener('click', async () => {
+        const { data } = await supabaseDash.from('config_loja').select('*').eq('id', 1).single();
+        if (data) {
+            document.getElementById('configNomeLoja').value = data.nome_loja || '';
+            document.getElementById('configLogoUrl').value = data.logo_url || '';
+            document.getElementById('configCorPrimaria').value = data.cor_primaria || '#deff9a';
+            document.getElementById('configCorFundo').value = data.cor_fundo || '#020617';
+        }
+    });
+        aparenciaForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.innerText = 'Salvando...';
+        btn.disabled = true;
+        try {
+            const formData = new FormData(aparenciaForm);
+            const dados = Object.fromEntries(formData.entries());
+            const { error } = await supabaseDash.from('config_loja').upsert({
+                id: 1,
+                nome_loja: dados.configNomeLoja,
+                logo_url: dados.configLogoUrl,
+                cor_primaria: dados.configCorPrimaria,
+                cor_fundo: dados.configCorFundo
+            });
+            if (error) throw error;
+            alert('Aparência salva com sucesso!');
+        } catch (err) {
+            alert('Erro ao salvar: ' + err.message);
+        } finally {
+            btn.innerText = 'Salvar Aparência';
+            btn.disabled = false;
         }
     });
 
     document.addEventListener('DOMContentLoaded', checkUserSession);
-    
-        btnProdutos.addEventListener('click', () => alternarAba(abaProdutos, btnProdutos));
-        btnRelatorios.addEventListener('click', () => alternarAba(abaRelatorios, btnRelatorios));
-        btnConfig.addEventListener('click', () => alternarAba(abaConfig, btnConfig));
-        btnAparencia.addEventListener('click', () => alternarAba(abaAparencia, btnAparencia));
-        
-        async function checkUserSession() {
-            const { data: { session }, error } = await supabaseDash.auth.getSession();
-            if (error ||!session) {
-                window.location.href = "admin-login.html";
-                return;
-            }
-            userEmailSpan.innerText = session.user.email;
-
-            slugVendedor = session.user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-            linkPersonalizado = `https://catalogo-sp-comercial.vercel.app/?v=${slugVendedor}`;
-
-            await fetchCategories();
-            await fetchCategoriasGrid();
-            await fetchMetrics();
-            setupBotoesVendedor();
-        }
-
-                function setupBotoesVendedor() {
-            btnVerCatalogo.addEventListener('click', () => {
-                window.open(linkPersonalizado, '_blank');
-            });
-
-            btnCopiarLink.addEventListener('click', () => {
-                navigator.clipboard.writeText(linkPersonalizado);
-                btnCopiarLink.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!';
-                setTimeout(() => {
-                    btnCopiarLink.innerHTML = '<i class="fa-solid fa-link"></i> Copiar Link';
-                }, 2000);
-            });
-
-            btnGerarQR.addEventListener('click', () => {
-                document.getElementById('qrcode').innerHTML = '';
-                new QRCode(document.getElementById('qrcode'), {
-                    text: linkPersonalizado,
-                    width: 256,
-                    height: 256,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                });
-                document.getElementById('linkVendedor').innerText = linkPersonalizado;
-                qrModal.classList.add('active');
-            });
-
-            closeQRModalX.addEventListener('click', () => qrModal.classList.remove('active'));
-
-            document.getElementById('btnBaixarQR').addEventListener('click', () => {
-                const canvas = document.querySelector('#qrcode canvas');
-                const url = canvas.toDataURL('image/png');
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `qrcode-${slugVendedor}.png`;
-                a.click();
-            });
-        }
-
-        async function fetchMetrics() {
-            try {
-                const { data, error } = await supabaseDash.from('metricas').select('visualizacoes, cliques_whatsapp').eq('id', 1).single();
-                if (error) throw error;
-                if (data) {
-                    lblVisualizacoes.innerText = data.visualizacoes || 0;
-                    lblCliquesWhats.innerText = data.cliques_whatsapp || 0;
-                }
-            } catch (err) {
-                console.error("Erro ao sincronizar métricas:", err.message);
-            }
-        }
-
-               async function fetchCategories() {
-            try {
-                const { data: categorias, error } = await supabaseDash.from('categorias').select('id, nome_categoria').order('nome_categoria', { ascending: true });
-                if (error) throw error;
-                
-                const valorModalAtual = prodCategoriaSelect.value;
-                prodCategoriaSelect.innerHTML = '<option value="">Selecione uma categoria</option>';
-                
-                if (!categorias || categorias.length === 0) {
-                    prodCategoriaSelect.innerHTML = '<option value="">Nenhuma categoria cadastrada</option>';
-                    return;
-                }
-                
-                categorias.forEach(cat => {
-                    prodCategoriaSelect.innerHTML += `<option value="${cat.id}">${cat.nome_categoria}</option>`;
-                 });
-                
-                if (valorModalAtual) prodCategoriaSelect.value = valorModalAtual;
-            } catch (err) {
-                console.error("Erro ao listar categorias:", err.message);
-            }
-        }
-
-        // ===== GRID DE CATEGORIAS - NOVA DINÂMICA =====
-        async function fetchCategoriasGrid() {
-            try {
-                const { data: categorias, error } = await supabaseDash
-                   .from('categorias')
-                   .select(`
-                        id, 
-                        nome_categoria,
-                        produtos(id, produto_imagens(url, ordem))
-                    `)
-                   .order('nome_categoria', { ascending: true });
-                
-                if (error) throw error;
-
-                if (!categorias || categorias.length === 0) {
-                    categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 40px;">
-                        <i class="fa-solid fa-folder-open" style="font-size: 3rem; margin-bottom: 15px; color: #334155;"></i>
-                        <p>Nenhuma categoria cadastrada ainda.</p>
-                        <p style="font-size: 0.85rem; margin-top: 8px;">Clique em "Nova Categoria" pra começar.</p>
-                    </div>`;
-                    return;
-                }
-
-                categoriasGrid.innerHTML = "";
-                let totalItens = 0;
-
-                categorias.forEach(cat => {
-                    const qtdProdutos = cat.produtos?.length || 0;
-                    totalItens += qtdProdutos;
-                    
-                    // Pega primeira imagem do primeiro produto como capa da categoria
-                    let fotoCapa = 'https://via.placeholder.com/200x140/1e293b/64748b?text=Sem+Foto';
-                    if (cat.produtos && cat.produtos.length > 0) {
-                        const primeiroProduto = cat.produtos[0];
-                        if (primeiroProduto.produto_imagens && primeiroProduto.produto_imagens.length > 0) {
-                            const imgs = primeiroProduto.produto_imagens.sort((a,b) => a.ordem - b.ordem);
-                            fotoCapa = imgs[0]?.url || fotoCapa;
-                        }
-                    }
-
-                    const card = document.createElement('div');
-                    card.className = 'categoria-card';
-                    card.innerHTML = `
-                        <img src="${fotoCapa}" class="categoria-img" alt="${cat.nome_categoria}">
-                        <div class="categoria-info">
-                            <h3>${cat.nome_categoria}</h3>
-                            <p>${qtdProdutos} ${qtdProdutos === 1? 'produto' : 'produtos'}</p>
-                        </div>
-                    `;
-                    card.onclick = () => abrirCategoria(cat.id, cat.nome_categoria);
-                    categoriasGrid.appendChild(card);
-                });
-
-                totalProductsP.innerText = totalItens;
-            } catch (err) {
-                categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #f87171; padding: 40px;">Erro ao carregar categorias.</div>`;
-            }
-        }
-
-        async function abrirCategoria(id, nome) {
-
-        async function abrirCategoria(id, nome) {
-            categoriaAtualId = id;
-            categoriaAtualNome = nome;
-            tituloSecao.innerText = nome;
-            viewCategorias.style.display = 'none';
-            viewProdutos.style.display = 'block';
-            openModalBtn.style.display = 'flex';
-            await fetchAdminProducts(id);
-        }
-
-        btnVoltarCategorias.addEventListener('click', () => {
-            viewProdutos.style.display = 'none';
-            viewCategorias.style.display = 'block';
-            tituloSecao.innerText = 'Categorias';
-            openModalBtn.style.display = 'none';
-            categoriaAtualId = null;
-            categoriaAtualNome = '';
-            fetchCategoriasGrid();
-        });
-
-        async function fetchAdminProducts(categoriaId) {
-            try {
-                productsTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 30px;">Carregando...</td></tr>`;
-                
-                let query = supabaseDash.from('produtos').select('id, nome, marca, preco, categoria_id, produto_imagens(url, ordem)');
-                if (categoriaId) {
-                    query = query.eq('categoria_id', categoriaId);
-                }
-                const { data: produtos, error } = await query.order('id', { ascending: false });
-                if (error) throw error;
-
-                if (!produtos || produtos.length === 0) {
-                    productsTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 30px;">Nenhum produto nesta categoria.</td></tr>`;
-                    return;
-                }
-
-                productsTableBody.innerHTML = "";
-                produtos.forEach(item => {
-                    const tr = document.createElement('tr');
-                    const fotos = item.produto_imagens?.sort((a,b) => a.ordem - b.ordem) || [];
-                    const primeiraFoto = fotos[0]?.url || 'https://via.placeholder.com/45';
-                    const qtdFotos = fotos.length;
-
-                    tr.innerHTML = `
-                        <td>
-                            <div style="position: relative; width: 45px; height: 45px;">
-                                <img src="${primeiraFoto}" class="product-img" alt="Foto">
-                                ${qtdFotos > 1? `<span class="badge-fotos">+${qtdFotos}</span>` : ''}
-                            </div>
-                        </td>
-                        <td><strong>${item.nome || 'Sem Nome'}</strong></td>
-                        <td>${item.marca || 'Genérico'}</td>
-                        <td style="color: #deff9a; font-weight: 600;">${item.preco || '0,00'}</td>
-                        <td>
-                            <div class="actions-cell">
-                                <button class="btn-action" onclick="openEditModal(${item.id})" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button class="btn-action btn-delete" onclick="deleteProduct(${item.id})" title="Excluir"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                        </td>
-                    `;
-                    productsTableBody.appendChild(tr);
-                });
-            } catch (err) {
-                productsTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #f87171; padding: 30px;">Erro ao carregar.</td></tr>`;
-            }
-        }
-
-        categoryForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            btnSaveCategory.innerText = "Criando...";
-            btnSaveCategory.disabled = true;
-            try {
-                const nomeCat = document.getElementById('catNome').value;
-                const { error } = await supabaseDash.from('categorias').insert([{ nome_categoria: nomeCat }]);
-                if (error) throw error;
-                alert("Categoria criada com sucesso!");
-                fecharCatModal();
-                await fetchCategories();
-                await fetchCategoriasGrid();
-            } catch (err) {
-                alert("Erro ao criar categoria: " + err.message);
-            } finally {
-                btnSaveCategory.innerText = "Salvar Categoria";
-                btnSaveCategory.disabled = false;
-            }
-        });
-
-        // ===== GALERIA DRAG DROP - HOTFIX SORTABLE =====
-        window.openEditModal = async function(id) {
-            produtoEditandoId = id;
-            try {
-                const { data: produto, error } = await supabaseDash.from('produtos').select('*').eq('id', id).single();
-                if (error) throw error;
-                await fetchCategories();
-
-                editProductId.value = produto.id;
-                document.getElementById('prodNome').value = produto.nome;
-                document.getElementById('prodMarca').value = produto.marca;
-                document.getElementById('prodPreco').value = produto.preco;
-                prodCategoriaSelect.value = produto.categoria_id || "";
-
-                await carregarGaleria(produto.id);
-                
-                modalTitle.innerText = "Editar Produto";
-                btnSaveProduct.innerText = "Atualizar Produto";
-                productModal.classList.add('active');
-
-                // HOTFIX: Espera o modal renderizar antes de iniciar Sortable
-                setTimeout(() => {
-                    if (sortableInstance) sortableInstance.destroy();
-                    const el = document.getElementById('galeriaAtual');
-                    if (el) {
-                        sortableInstance = new Sortable(el, {
-                            animation: 150,
-                            handle: '.drag-handle',
-                            onEnd: salvarNovaOrdem
-                        });
-                    }
-                }, 100);
-            } catch (err) {
-                alert("Erro ao carregar produto: " + err.message);
-            }
-        }
-
-        async function carregarGaleria(produtoId) {
-            const { data: imgs } = await supabaseDash
-           .from('produto_imagens')
-           .select('*')
-           .eq('produto_id', produtoId)
-           .order('ordem');
-
-            document.getElementById('galeriaAtual').innerHTML = imgs.map(img => `
-                <div class="preview-item existente" data-id="${img.id}">
-                    <div class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></div>
-                    <img src="${img.url}">
-                    <button type="button" class="btn-remove" onclick="deletarImagem(${img.id})">×</button>
-                </div>
-            `).join('');
-        }
-
-        async function salvarNovaOrdem() {
-            const items = document.querySelectorAll('#galeriaAtual > div');
-            const updates = Array.from(items).map((el, index) => ({
-                id: parseInt(el.dataset.id),
-                ordem: index
-            }));
-            await supabaseDash.from('produto_imagens').upsert(updates);
-        }
-
-        document.getElementById('inputImagens').addEventListener('change', async (e) => {
-            const files = e.target.files;
-            if (!files.length ||!produtoEditandoId) {
-                if (!produtoEditandoId) alert('Salve o produto primeiro antes de adicionar fotos!');
-                return;
-            }
-
-            const { data: existentes } = await supabaseDash
-           .from('produto_imagens')
-           .select('ordem')
-           .eq('produto_id', produtoEditandoId)
-           .order('ordem', { ascending: false })
-           .limit(1);
-
-            let proximaOrdem = existentes?.length? existentes[0].ordem + 1 : 0;
-
-            for (const file of files) {
-                const nomeArq = `produtos/${produtoEditandoId}/${Date.now()}-${file.name}`;
-                await supabaseDash.storage.from('PRODUTOS').upload(nomeArq, file);
-                const { data } = supabaseDash.storage.from('PRODUTOS').getPublicUrl(nomeArq);
-                
-                await supabaseDash.from('produto_imagens').insert({
-                    produto_id: produtoEditandoId,
-                    url: data.publicUrl,
-                    ordem: proximaOrdem++
-                });
-            }
-            
-            e.target.value = '';
-            await carregarGaleria(produtoEditandoId);
-        });
-
-        window.deletarImagem = async function(id) {
-            if (!confirm('Deletar essa imagem?')) return;
-            await supabaseDash.from('produto_imagens').delete().eq('id', id);
-            await carregarGaleria(produtoEditandoId);
-        }
-
-        openModalBtn.addEventListener('click', async () => {
-            modalTitle.innerText = "Adicionar Novo Produto";
-            btnSaveProduct.innerText = "Salvar Produto";
-            editProductId.value = "";
-            produtoEditandoId = null;
-            productForm.reset();
-            document.getElementById('galeriaAtual').innerHTML = '';
-            if (sortableInstance) {
-                sortableInstance.destroy();
-                sortableInstance = null;
-            }
-            productModal.classList.add('active');
-            await fetchCategories();
-            // Se abriu de dentro de uma categoria, já seleciona
-            if (categoriaAtualId) {
-                prodCategoriaSelect.value = categoriaAtualId;
-            }
-        });
-
-        productForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const isEditing = editProductId.value!== "";
-            btnSaveProduct.disabled = true;
-            btnSaveProduct.innerText = isEditing? "Atualizando..." : "Salvando...";
-
-            const dadosProduto = {
-                nome: document.getElementById('prodNome').value,
-                marca: document.getElementById('prodMarca').value,
-                preco: document.getElementById('prodPreco').value,
-                categoria_id: parseInt(prodCategoriaSelect.value) || null,
-                descricao: "Disponível para retirada ou entrega"
-            };
-
-            try {
-                if (isEditing) {
-                    const produtoId = parseInt(editProductId.value);
-                    const { error: updateError } = await supabaseDash.from('produtos').update(dadosProduto).eq('id', produtoId);
-                    if (updateError) throw updateError;
-                    alert("Produto atualizado!");
-                } else {
-                    const { data: novoProduto, error: insertError } = await supabaseDash.from('produtos').insert([dadosProduto]).select().single();
-                    if (insertError) throw insertError;
-                    produtoEditandoId = novoProduto.id;
-                    editProductId.value = novoProduto.id;
-                    alert("Produto cadastrado! Agora adicione as fotos.");
-                    // Não fecha o modal pra poder adicionar foto
-                    await carregarGaleria(produtoEditandoId);
-                    modalTitle.innerText = "Editar Produto - Adicione as fotos";
-                    btnSaveProduct.innerText = "Atualizar Produto";
-                    btnSaveProduct.disabled = false;
-                    return;
-                }
-                fecharModal();
-                if (categoriaAtualId) {
-                    await fetchAdminProducts(categoriaAtualId);
-                } else {
-                    await fetchCategoriasGrid();
-                }
-            } catch (err) {
-                alert("Erro no processo: " + err.message);
-            } finally {
-                btnSaveProduct.innerText = "Salvar Produto";
-                btnSaveProduct.disabled = false;
-            }
-        });
-
-        window.deleteProduct = async function(id) {
-            if (!confirm("Tem certeza que deseja excluir este produto? Isso apagará todas as fotos.")) return;
-            try {
-                const { error } = await supabaseDash.from('produtos').delete().eq('id', id);
-                if (error) throw error;
-                alert("Produto excluído com sucesso!");
-                if (categoriaAtualId) {
-                    await fetchAdminProducts(categoriaAtualId);
-                } else {
-                    await fetchCategoriasGrid();
-                }
-            } catch (err) {
-                alert("Erro ao excluir produto: " + err.message);
-            }
-        }
-
-        const fecharModal = () => {
-            productModal.classList.remove('active');
-            productForm.reset();
-            if (sortableInstance) {
-                sortableInstance.destroy();
-                sortableInstance = null;
-            }
-            produtoEditandoId = null;
-        };
-        closeModalX.addEventListener('click', fecharModal);
-        closeModalBtn.addEventListener('click', fecharModal);
-
-        openCategoryModalBtn.addEventListener('click', () => categoryModal.classList.add('active'));
-        const fecharCatModal = () => { categoryModal.classList.remove('active'); categoryForm.reset(); };
-        closeCatModalX.addEventListener('click', fecharCatModal);
-        closeCatModalBtn.addEventListener('click', fecharCatModal);
-
-        prodPrecoInput.addEventListener('input', (e) => {
-            let value = e.target.value.replace(/\D/g, "");
-            if (value === "") { e.target.value = ""; return; }
-            let numericValue = (parseFloat(value) / 100).toFixed(2);
-            let formattedValue = numericValue.replace(".", ",").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-            const categoriaTexto = prodCategoriaSelect.options[prodCategoriaSelect.selectedIndex]?.text.toLowerCase() || '';
-            if (categoriaTexto.includes('piso') || categoriaTexto.includes('porcelanato') || categoriaTexto.includes('vinílico')) {
-                e.target.value = `R$ ${formattedValue}/m²`;
-            } else {
-                e.target.value = `R$ ${formattedValue}`;
-            }
-        });
-
-        prodCategoriaSelect.addEventListener('change', () => {
-            prodPrecoInput.dispatchEvent(new Event('input'));
-        });
-
-        logoutBtn.addEventListener('click', async () => {
-            const { error } = await supabaseDash.auth.signOut();
-            if (error) {
-                alert("Erro ao sair: " + error.message);
-            } else {
-                window.location.href = "admin-login.html";
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', checkUserSession);
-
-        btnAparencia.addEventListener('click', async () => {
-            const { data } = await supabaseDash.from('config_loja').select('*').eq('id', 1).single();
-            if (data) {
-                document.getElementById('configNomeLoja').value = data.nome_loja || '';
-                document.getElementById('configLogoUrl').value = data.logo_url || '';
-                document.getElementById('configCorPrimaria').value = data.cor_primaria || '#deff9a';
-                document.getElementById('configCorFundo').value = data.cor_fundo || '#020617';
-            }
-        });
-
-        aparenciaForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('.btn-save');
-            btn.innerText = 'Salvando...';
-            btn.disabled = true;
-
-            const { error } = await supabaseDash.from('config_loja').update({
-                nome_loja: document.getElementById('configNomeLoja').value,
-                logo_url: document.getElementById('configLogoUrl').value,
-                cor_primaria: document.getElementById('configCorPrimaria').value,
-                cor_fundo: document.getElementById('configCorFundo').value
-            }).eq('id', 1);
-
-            if (error) {
-                alert('Erro: ' + error.message);
-            } else {
-                alert('Aparência atualizada!');
-            }
-
-            btn.innerText = 'Salvar Aparência';
-            btn.disabled = false;
-        });
-    </script>
+</script>
 </body>
 </html>
