@@ -396,32 +396,15 @@
             console.error("Erro ao sincronizar métricas:", err.message);
         }
     }
+    
 
-    async function fetchCategories() {
-        try {
-            const { data: categorias, error } = await supabaseDash.from('categorias').select('id, nome_categoria').order('nome_categoria', { ascending: true });
-            if (error) throw error;
-            const valorModalAtual = prodCategoriaSelect.value;
-            prodCategoriaSelect.innerHTML = '<option value="">Selecione uma categoria</option>';
-            if (!categorias || categorias.length === 0) {
-                prodCategoriaSelect.innerHTML = '<option value="">Nenhuma categoria cadastrada</option>';
-                return;
-            }
-            categorias.forEach(cat => {
-                prodCategoriaSelect.innerHTML += `<option value="${cat.id}">${cat.nome_categoria}</option>`;
-            });
-            if (valorModalAtual) prodCategoriaSelect.value = valorModalAtual;
-        } catch (err) {
-            console.error("Erro ao listar categorias:", err.message);
-        }
-    }
-
-    async function fetchCategoriasGrid() {
+       async function fetchCategoriasGrid() {
         try {
             const { data: categorias, error } = await supabaseDash
-           .from('categorias')
-           .select(`id, nome_categoria, produtos(id, produto_imagens(url, ordem))`)
-           .order('nome_categoria', { ascending: true });
+         .from('categorias')
+         .select(`id, nome_categoria, produtos(id, produto_imagens(url, ordem))`)
+         .order('nome_categoria', { ascending: true }); // SEM LIMIT - PEGA TODAS
+
             if (error) throw error;
 
             if (!categorias || categorias.length === 0) {
@@ -440,27 +423,38 @@
             categorias.forEach(cat => {
                 const qtdProdutos = cat.produtos?.length || 0;
                 totalItens += qtdProdutos;
-                let fotoCapa = 'https://via.placeholder.com/200x140/1e293b/64748b?text=Sem+Foto';
+
+                // PEGA A PRIMEIRA FOTO DO PRIMEIRO PRODUTO COMO CAPA
+                let fotoCapa = 'https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Foto';
                 if (cat.produtos && cat.produtos.length > 0) {
                     const primeiroProduto = cat.produtos[0];
                     if (primeiroProduto.produto_imagens && primeiroProduto.produto_imagens.length > 0) {
-                        const imgs = primeiroProduto.produto_imagens.sort((a,b) => a.ordem - b.ordem);
-                        fotoCapa = imgs[0]?.url || fotoCapa;
+                        const imgsOrdenadas = primeiroProduto.produto_imagens.sort((a,b) => a.ordem - b.ordem);
+                        if(imgsOrdenadas[0]?.url) {
+                            fotoCapa = imgsOrdenadas[0].url;
+                        }
                     }
                 }
+
                 const card = document.createElement('div');
                 card.className = 'categoria-card';
                 card.innerHTML = `
-                    <img src="${fotoCapa}" class="categoria-img" alt="${cat.nome_categoria}">
+                    <img src="${fotoCapa}"
+                         class="categoria-img"
+                         alt="${cat.nome_categoria}"
+                         onerror="this.onerror=null; this.src='https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Foto'">
                     <div class="categoria-info">
                         <h3>${cat.nome_categoria}</h3>
                         <p>${qtdProdutos} ${qtdProdutos === 1? 'produto' : 'produtos'}</p>
-                    </div>`;
+                    </div>
+                `;
                 card.onclick = () => abrirCategoria(cat.id, cat.nome_categoria);
                 categoriasGrid.appendChild(card);
             });
+
             totalProductsP.innerText = totalItens;
         } catch (err) {
+            console.error("Erro ao carregar categorias:", err);
             categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #f87171; padding: 40px;">Erro ao carregar categorias.</div>`;
         }
     }
