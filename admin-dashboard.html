@@ -246,7 +246,15 @@
                 <button class="btn-close-modal" id="closeCatModalX"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="categoryForm">
-                <div class="form-group"><label>NOME DA CATEGORIA</label><input type="text" id="catNome" placeholder="Ex: Tintas, Ferramentas, Pisos" required></div>
+                <div class="form-group">
+                    <label>NOME DA CATEGORIA</label>
+                    <input type="text" id="catNome" placeholder="Ex: Tintas, Ferramentas, Pisos" required>
+                </div>
+                <div class="form-group">
+                    <label>FOTO DE CAPA DA CATEGORIA</label>
+                    <input type="file" id="catFotoCapa" accept="image/*">
+                    <div id="previewCatCapa" style="margin-top:10px;"></div>
+                </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-cancel" id="closeCatModalBtn">Cancelar</button>
                     <button type="submit" class="btn-save" id="btnSaveCategory">Salvar Categoria</button>
@@ -359,7 +367,7 @@
             console.error("Erro ao listar categorias:", err.message);
         }
     }
-    
+
     async function checkUserSession() {
         const { data: { session }, error } = await supabaseDash.auth.getSession();
         if (error ||!session) {
