@@ -239,6 +239,31 @@
         </div>
     </div>
 
+     <div class="modal-overlay" id="editCategoryModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Editar Categoria</h2>
+                <button class="btn-close-modal" id="closeEditCatModalX"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="editCategoryForm">
+                <input type="hidden" id="editCatId">
+                <div class="form-group">
+                    <label>NOME DA CATEGORIA</label>
+                    <input type="text" id="editCatNome" required>
+                </div>
+                <div class="form-group">
+                    <label>FOTO DE CAPA DA CATEGORIA</label>
+                    <input type="file" id="editCatFotoCapa" accept="image/*">
+                    <div id="previewEditCatCapa" style="margin-top:10px;"></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="closeEditCatModalBtn">Cancelar</button>
+                    <button type="submit" class="btn-save" id="btnUpdateCategory">Atualizar Categoria</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="categoryModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -862,7 +887,72 @@
             btn.disabled = false;
         }
     });
+    const editCategoryModal = document.getElementById('editCategoryModal');
+    const editCategoryForm = document.getElementById('editCategoryForm');
+    const closeEditCatModalX = document.getElementById('closeEditCatModalX');
+    const closeEditCatModalBtn = document.getElementById('closeEditCatModalBtn');
 
+    window.openEditCatModal = function(id, nome, fotoAtual) {
+        document.getElementById('editCatId').value = id;
+        document.getElementById('editCatNome').value = nome;
+        document.getElementById('previewEditCatCapa').innerHTML = fotoAtual?
+            `<img src="${fotoAtual}" style="width:100%; max-height:150px; object-fit:cover; border-radius:8px; border:1px solid #334155;">` : '';
+        editCategoryModal.classList.add('active');
+    }
+
+    document.getElementById('editCatFotoCapa').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        const preview = document.getElementById('previewEditCatCapa');
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.innerHTML = `<img src="${e.target.result}" style="width:100%; max-height:150px; object-fit:cover; border-radius:8px; border:1px solid #334155;">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    editCategoryForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnUpdateCategory');
+        btn.innerText = 'Atualizando...';
+        btn.disabled = true;
+        try {
+            const id = document.getElementById('editCatId').value;
+            const nomeCat = document.getElementById('editCatNome').value;
+            const fotoFile = document.getElementById('editCatFotoCapa').files[0];
+            let updateData = { nome_categoria: nomeCat };
+
+            if (fotoFile) {
+                const nomeArq = `categorias/${Date.now()}-${fotoFile.name}`;
+                const { error: uploadError } = await supabaseDash.storage.from('PRODUTOS').upload(nomeArq, fotoFile);
+                if (uploadError) throw uploadError;
+                const { data } = supabaseDash.storage.from('PRODUTOS').getPublicUrl(nomeArq);
+                updateData.foto_capa = data.publicUrl;
+            }
+
+            const { error } = await supabaseDash.from('categorias').update(updateData).eq('id', id);
+            if (error) throw error;
+
+            alert("Categoria atualizada!");
+            editCategoryModal.classList.remove('active');
+            editCategoryForm.reset();
+            await fetchCategoriasGrid();
+        } catch (err) {
+            alert("Erro ao atualizar: " + err.message);
+        } finally {
+            btn.innerText = 'Atualizar Categoria';
+            btn.disabled = false;
+        }
+    });
+
+    const fecharEditCatModal = () => {
+        editCategoryModal.classList.remove('active');
+        editCategoryForm.reset();
+        document.getElementById('previewEditCatCapa').innerHTML = '';
+    };
+    closeEditCatModalX.addEventListener('click', fecharEditCatModal);
+    closeEditCatModalBtn.addEventListener('click', fecharEditCatModal);
     document.addEventListener('DOMContentLoaded', checkUserSession);
 </script>
 </body>
