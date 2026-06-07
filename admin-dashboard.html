@@ -278,7 +278,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-<script>    const SUPABASE_URL_DASH = "https://xxxsxsernmaltunwyfaq.supabase.co";
+<script>
+    const SUPABASE_URL_DASH = "https://xxxsxsernmaltunwyfaq.supabase.co";
     const SUPABASE_KEY_DASH = "sb_publishable_sQNMnxWafcK5iF6CCXFFXg_lhx2nTQ-";
     const supabaseDash = window.supabase.createClient(SUPABASE_URL_DASH, SUPABASE_KEY_DASH);
 
@@ -349,7 +350,7 @@
     btnConfig.addEventListener('click', () => alternarAba(abaConfig, btnConfig));
     btnAparencia.addEventListener('click', () => alternarAba(abaAparencia, btnAparencia));
 
-        async function fetchCategories() {
+    async function fetchCategories() {
         try {
             const { data: categorias, error } = await supabaseDash.from('categorias').select('id, nome_categoria').order('nome_categoria', { ascending: true });
             if (error) throw error;
@@ -368,69 +369,12 @@
         }
     }
 
-    async function checkUserSession() {
-        const { data: { session }, error } = await supabaseDash.auth.getSession();
-        if (error ||!session) {
-            window.location.href = "admin-login.html";
-            return;
-        }
-        userEmailSpan.innerText = session.user.email;
-        slugVendedor = session.user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-        linkPersonalizado = `https://catalogo-sp-comercial.vercel.app/?v=${slugVendedor}`;
-        await fetchCategories();
-        await fetchCategoriasGrid();
-        await fetchMetrics();
-        setupBotoesVendedor();
-    }
-
-    function setupBotoesVendedor() {
-        btnVerCatalogo.addEventListener('click', () => window.open(linkPersonalizado, '_blank'));
-        btnCopiarLink.addEventListener('click', () => {
-            navigator.clipboard.writeText(linkPersonalizado);
-            btnCopiarLink.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!';
-            setTimeout(() => btnCopiarLink.innerHTML = '<i class="fa-solid fa-link"></i> Copiar Link', 2000);
-        });
-        btnGerarQR.addEventListener('click', () => {
-            document.getElementById('qrcode').innerHTML = '';
-            new QRCode(document.getElementById('qrcode'), {
-                text: linkPersonalizado,
-                width: 256,
-                height: 256,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-            });
-            document.getElementById('linkVendedor').innerText = linkPersonalizado;
-            qrModal.classList.add('active');
-        });
-        closeQRModalX.addEventListener('click', () => qrModal.classList.remove('active'));
-        document.getElementById('btnBaixarQR').addEventListener('click', () => {
-            const canvas = document.querySelector('#qrcode canvas');
-            const a = document.createElement('a');
-            a.href = canvas.toDataURL('image/png');
-            a.download = `qrcode-${slugVendedor}.png`;
-            a.click();
-        });
-    }
-        async function fetchMetrics() {
-        try {
-            const { data, error } = await supabaseDash.from('metricas').select('visualizacoes, cliques_whatsapp').eq('id', 1).single();
-            if (error) throw error;
-            if (data) {
-                lblVisualizacoes.innerText = data.visualizacoes || 0;
-                lblCliquesWhats.innerText = data.cliques_whatsapp || 0;
-            }
-        } catch (err) {
-            console.error("Erro ao sincronizar métricas:", err.message);
-        }
-    }
-
-
-       async function fetchCategoriasGrid() {
+    async function fetchCategoriasGrid() {
         try {
             const { data: categorias, error } = await supabaseDash
-         .from('categorias')
-         .select(`id, nome_categoria, produtos(id, produto_imagens(url, ordem))`)
-         .order('nome_categoria', { ascending: true }); // SEM LIMIT - PEGA TODAS
+        .from('categorias')
+        .select(`id, nome_categoria, foto_capa, produtos(id, produto_imagens(url, ordem))`)
+        .order('nome_categoria', { ascending: true });
 
             if (error) throw error;
 
@@ -451,15 +395,12 @@
                 const qtdProdutos = cat.produtos?.length || 0;
                 totalItens += qtdProdutos;
 
-                // PEGA A PRIMEIRA FOTO DO PRIMEIRO PRODUTO COMO CAPA
-                let fotoCapa = 'https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Foto';
-                if (cat.produtos && cat.produtos.length > 0) {
+                let fotoCapa = cat.foto_capa || 'https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Foto';
+                if (!cat.foto_capa && cat.produtos.length > 0) {
                     const primeiroProduto = cat.produtos[0];
                     if (primeiroProduto.produto_imagens && primeiroProduto.produto_imagens.length > 0) {
                         const imgsOrdenadas = primeiroProduto.produto_imagens.sort((a,b) => a.ordem - b.ordem);
-                        if(imgsOrdenadas[0]?.url) {
-                            fotoCapa = imgsOrdenadas[0].url;
-                        }
+                        if(imgsOrdenadas[0]?.url) fotoCapa = imgsOrdenadas[0].url;
                     }
                 }
 
@@ -496,32 +437,7 @@
         await fetchAdminProducts(id);
     }
 
-    btnVoltarCategorias.addEventListener('click', () => {
-        viewProdutos.style.display = 'none';
-        viewCategorias.style.display = 'block';
-        tituloSecao.innerText = 'Categorias';
-        openModalBtn.style.display = 'none';
-        categoriaAtualId = null;
-        categoriaAtualNome = '';
-        fetchCategoriasGrid();
-    });
-
-    logoutBtn.addEventListener('click', async () => {
-        const { error } = await supabaseDash.auth.signOut();
-        if (error) alert("Erro ao sair: " + error.message);
-        else window.location.href = "admin-login.html";
-    });
-
-    btnAparencia.addEventListener('click', async () => {
-        const { data } = await supabaseDash.from('config_loja').select('*').eq('id', 1).single();
-        if (data) {
-            document.getElementById('configNomeLoja').value = data.nome_loja || '';
-            document.getElementById('configLogoUrl').value = data.logo_url || '';
-            document.getElementById('configCorPrimaria').value = data.cor_primaria || '#deff9a';
-            document.getElementById('configCorFundo').value = data.cor_fundo || '#020617';
-        }
-    });
-        async function fetchAdminProducts(categoriaId) {
+    async function fetchAdminProducts(categoriaId) {
         try {
             productsTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 30px;">Carregando...</td></tr>`;
 
@@ -605,10 +521,10 @@
 
     async function carregarGaleria(produtoId) {
         const { data: imgs } = await supabaseDash
-      .from('produto_imagens')
-      .select('*')
-      .eq('produto_id', produtoId)
-      .order('ordem');
+    .from('produto_imagens')
+    .select('*')
+    .eq('produto_id', produtoId)
+    .order('ordem');
 
         document.getElementById('galeriaAtual').innerHTML = imgs.map(img => `
             <div class="preview-item existente" data-id="${img.id}">
@@ -649,7 +565,275 @@
             alert("Erro ao excluir produto: " + err.message);
         }
     }
-        aparenciaForm.addEventListener('submit', async (e) => {
+
+    async function fetchMetrics() {
+        try {
+            const { data, error } = await supabaseDash.from('metricas').select('visualizacoes, cliques_whatsapp').eq('id', 1).single();
+            if (error) throw error;
+            if (data) {
+                lblVisualizacoes.innerText = data.visualizacoes || 0;
+                lblCliquesWhats.innerText = data.cliques_whatsapp || 0;
+            }
+        } catch (err) {
+            console.error("Erro ao sincronizar métricas:", err.message);
+        }
+    }
+
+    async function checkUserSession() {
+        const { data: { session }, error } = await supabaseDash.auth.getSession();
+        if (error ||!session) {
+            window.location.href = "admin-login.html";
+            return;
+        }
+        userEmailSpan.innerText = session.user.email;
+        slugVendedor = session.user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+        linkPersonalizado = `https://catalogo-sp-comercial.vercel.app/?v=${slugVendedor}`;
+        await fetchCategories();
+        await fetchCategoriasGrid();
+        await fetchMetrics();
+        setupBotoesVendedor();
+    }
+
+    function setupBotoesVendedor() {
+        btnVerCatalogo.addEventListener('click', () => window.open(linkPersonalizado, '_blank'));
+        btnCopiarLink.addEventListener('click', () => {
+            navigator.clipboard.writeText(linkPersonalizado);
+            btnCopiarLink.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!';
+            setTimeout(() => btnCopiarLink.innerHTML = '<i class="fa-solid fa-link"></i> Copiar Link', 2000);
+        });
+        btnGerarQR.addEventListener('click', () => {
+            document.getElementById('qrcode').innerHTML = '';
+            new QRCode(document.getElementById('qrcode'), {
+                text: linkPersonalizado,
+                width: 256,
+                height: 256,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+            });
+            document.getElementById('linkVendedor').innerText = linkPersonalizado;
+            qrModal.classList.add('active');
+        });
+        closeQRModalX.addEventListener('click', () => qrModal.classList.remove('active'));
+        document.getElementById('btnBaixarQR').addEventListener('click', () => {
+            const canvas = document.querySelector('#qrcode canvas');
+            const a = document.createElement('a');
+            a.href = canvas.toDataURL('image/png');
+            a.download = `qrcode-${slugVendedor}.png`;
+            a.click();
+        });
+    }
+
+    btnVoltarCategorias.addEventListener('click', () => {
+        viewProdutos.style.display = 'none';
+        viewCategorias.style.display = 'block';
+        tituloSecao.innerText = 'Categorias';
+        openModalBtn.style.display = 'none';
+        categoriaAtualId = null;
+        categoriaAtualNome = '';
+        fetchCategoriasGrid();
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+        const { error } = await supabaseDash.auth.signOut();
+        if (error) alert("Erro ao sair: " + error.message);
+        else window.location.href = "admin-login.html";
+    });
+
+    btnAparencia.addEventListener('click', async () => {
+        const { data } = await supabaseDash.from('config_loja').select('*').eq('id', 1).single();
+        if (data) {
+            document.getElementById('configNomeLoja').value = data.nome_loja || '';
+            document.getElementById('configLogoUrl').value = data.logo_url || '';
+            document.getElementById('configCorPrimaria').value = data.cor_primaria || '#deff9a';
+            document.getElementById('configCorFundo').value = data.cor_fundo || '#020617';
+        }
+    });
+
+    // Preview capa categoria
+    document.getElementById('catFotoCapa').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        const preview = document.getElementById('previewCatCapa');
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.innerHTML = `<img src="${e.target.result}" style="width:100%; max-height:150px; object-fit:cover; border-radius:8px; border:1px solid #334155;">`;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.innerHTML = '';
+        }
+    });
+
+    categoryForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        btnSaveCategory.innerText = "Salvando...";
+        btnSaveCategory.disabled = true;
+        try {
+            const nomeCat = document.getElementById('catNome').value;
+            const fotoFile = document.getElementById('catFotoCapa').files[0];
+            let urlCapa = null;
+
+            if (fotoFile) {
+                const nomeArq = `categorias/${Date.now()}-${fotoFile.name}`;
+                const { error: uploadError } = await supabaseDash.storage.from('PRODUTOS').upload(nomeArq, fotoFile);
+                if (uploadError) throw uploadError;
+                const { data } = supabaseDash.storage.from('PRODUTOS').getPublicUrl(nomeArq);
+                urlCapa = data.publicUrl;
+            }
+
+            const { error } = await supabaseDash.from('categorias').insert([{
+                nome_categoria: nomeCat,
+                foto_capa: urlCapa
+            }]);
+
+            if (error) throw error;
+            alert("Categoria criada com sucesso!");
+            fecharCatModal();
+            await fetchCategories();
+            await fetchCategoriasGrid();
+        } catch (err) {
+            alert("Erro ao criar categoria: " + err.message);
+        } finally {
+            btnSaveCategory.innerText = "Salvar Categoria";
+            btnSaveCategory.disabled = false;
+        }
+    });
+
+    const fecharCatModal = () => {
+        categoryModal.classList.remove('active');
+        categoryForm.reset();
+        document.getElementById('previewCatCapa').innerHTML = '';
+    };
+    closeCatModalX.addEventListener('click', fecharCatModal);
+    closeCatModalBtn.addEventListener('click', fecharCatModal);
+    openCategoryModalBtn.addEventListener('click', () => categoryModal.classList.add('active'));
+
+    openModalBtn.addEventListener('click', async () => {
+        modalTitle.innerText = "Adicionar Novo Produto";
+        btnSaveProduct.innerText = "Salvar Produto";
+        editProductId.value = "";
+        produtoEditandoId = null;
+        productForm.reset();
+        document.getElementById('galeriaAtual').innerHTML = '';
+        if (sortableInstance) {
+            sortableInstance.destroy();
+            sortableInstance = null;
+        }
+        productModal.classList.add('active');
+        await fetchCategories();
+        if (categoriaAtualId) {
+            prodCategoriaSelect.value = categoriaAtualId;
+        }
+    });
+
+    productForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const isEditing = editProductId.value!== "";
+        btnSaveProduct.disabled = true;
+        btnSaveProduct.innerText = isEditing? "Atualizando..." : "Salvando...";
+
+        const dadosProduto = {
+            nome: document.getElementById('prodNome').value,
+            marca: document.getElementById('prodMarca').value,
+            preco: document.getElementById('prodPreco').value,
+            categoria_id: parseInt(prodCategoriaSelect.value) || null,
+            descricao: "Disponível para retirada ou entrega"
+        };
+
+        try {
+            if (isEditing) {
+                const produtoId = parseInt(editProductId.value);
+                const { error: updateError } = await supabaseDash.from('produtos').update(dadosProduto).eq('id', produtoId);
+                if (updateError) throw updateError;
+                alert("Produto atualizado!");
+            } else {
+                const { data: novoProduto, error: insertError } = await supabaseDash.from('produtos').insert([dadosProduto]).select().single();
+                if (insertError) throw insertError;
+                produtoEditandoId = novoProduto.id;
+                editProductId.value = novoProduto.id;
+                alert("Produto cadastrado! Agora adicione as fotos.");
+                await carregarGaleria(produtoEditandoId);
+                modalTitle.innerText = "Editar Produto - Adicione as fotos";
+                btnSaveProduct.innerText = "Atualizar Produto";
+                btnSaveProduct.disabled = false;
+                return;
+            }
+            fecharModal();
+            if (categoriaAtualId) {
+                await fetchAdminProducts(categoriaAtualId);
+            } else {
+                await fetchCategoriasGrid();
+            }
+        } catch (err) {
+            alert("Erro no processo: " + err.message);
+        } finally {
+            btnSaveProduct.innerText = "Salvar Produto";
+            btnSaveProduct.disabled = false;
+        }
+    });
+
+    const fecharModal = () => {
+        productModal.classList.remove('active');
+        productForm.reset();
+        if (sortableInstance) {
+            sortableInstance.destroy();
+            sortableInstance = null;
+        }
+        produtoEditandoId = null;
+    };
+    closeModalX.addEventListener('click', fecharModal);
+    closeModalBtn.addEventListener('click', fecharModal);
+
+    document.getElementById('inputImagens').addEventListener('change', async (e) => {
+        const files = e.target.files;
+        if (!files.length ||!produtoEditandoId) {
+            if (!produtoEditandoId) alert('Salve o produto primeiro antes de adicionar fotos!');
+            return;
+        }
+
+        const { data: existentes } = await supabaseDash
+      .from('produto_imagens')
+      .select('ordem')
+      .eq('produto_id', produtoEditandoId)
+      .order('ordem', { ascending: false })
+      .limit(1);
+
+        let proximaOrdem = existentes?.length? existentes[0].ordem + 1 : 0;
+
+        for (const file of files) {
+            const nomeArq = `produtos/${produtoEditandoId}/${Date.now()}-${file.name}`;
+            await supabaseDash.storage.from('PRODUTOS').upload(nomeArq, file);
+            const { data } = supabaseDash.storage.from('PRODUTOS').getPublicUrl(nomeArq);
+
+            await supabaseDash.from('produto_imagens').insert({
+                produto_id: produtoEditandoId,
+                url: data.publicUrl,
+                ordem: proximaOrdem++
+            });
+        }
+
+        e.target.value = '';
+        await carregarGaleria(produtoEditandoId);
+    });
+
+    prodPrecoInput.addEventListener('input', (e) => {
+        let value = e.target.value.replace(/\D/g, "");
+        if (value === "") { e.target.value = ""; return; }
+        let numericValue = (parseFloat(value) / 100).toFixed(2);
+        let formattedValue = numericValue.replace(".", ",").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+        const categoriaTexto = prodCategoriaSelect.options[prodCategoriaSelect.selectedIndex]?.text.toLowerCase() || '';
+        if (categoriaTexto.includes('piso') || categoriaTexto.includes('porcelanato') || categoriaTexto.includes('vinílico')) {
+            e.target.value = `R$ ${formattedValue}/m²`;
+        } else {
+            e.target.value = `R$ ${formattedValue}`;
+        }
+    });
+
+    prodCategoriaSelect.addEventListener('change', () => {
+        prodPrecoInput.dispatchEvent(new Event('input'));
+    });
+
+    aparenciaForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button[type="submit"]');
         btn.innerText = 'Salvando...';
