@@ -404,9 +404,14 @@
                     }
                 }
 
-                const card = document.createElement('div');
+                                const card = document.createElement('div');
                 card.className = 'categoria-card';
+                card.style.position = 'relative';
                 card.innerHTML = `
+                    <button class="btn-edit-cat" onclick="event.stopPropagation(); openEditCatModal(${cat.id}, '${cat.nome_categoria}', '${cat.foto_capa || ''}')"
+                            style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.7); border:none; color:#deff9a; width:32px; height:32px; border-radius:8px; cursor:pointer; z-index:10;">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
                     <img src="${fotoCapa}"
                          class="categoria-img"
                          alt="${cat.nome_categoria}"
