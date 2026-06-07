@@ -705,9 +705,8 @@
 
             if (fotoFile) {
                 const nomeArq = `categorias/${Date.now()}-${fotoFile.name}`;
-                const { error: uploadError } = await supabaseDash.storage.from('PRODUTOS').upload(nomeArq, fotoFile);
-                if (uploadError) throw uploadError;
-                const { data } = supabaseDash.storage.from('PRODUTOS').getPublicUrl(nomeArq);
+               const { error: uploadError } = await supabaseDash.storage.from('FOTOS-PRODUTOS').upload(nomeArq, fotoFile);
+               const { data } = supabaseDash.storage.from('FOTOS-PRODUTOS').getPublicUrl(nomeArq);
                 urlCapa = data.publicUrl;
             }
 
@@ -925,9 +924,8 @@
 
             if (fotoFile) {
                 const nomeArq = `categorias/${Date.now()}-${fotoFile.name}`;
-                const { error: uploadError } = await supabaseDash.storage.from('PRODUTOS').upload(nomeArq, fotoFile);
-                if (uploadError) throw uploadError;
-                const { data } = supabaseDash.storage.from('PRODUTOS').getPublicUrl(nomeArq);
+                const { error: uploadError } = await supabaseDash.storage.from('FOTOS-PRODUTOS').upload(nomeArq, fotoFile);
+const { data } = supabaseDash.storage.from('FOTOS-PRODUTOS').getPublicUrl(nomeArq);
                 updateData.foto_capa = data.publicUrl;
             }
 
