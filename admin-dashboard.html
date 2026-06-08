@@ -395,68 +395,73 @@
     }
 
     async function fetchCategoriasGrid() {
-        try {
-            const { data: categorias, error } = await supabaseDash
-       .from('categorias')
-       .select(`id, nome_categoria, foto_capa, produtos(id, produto_imagens(url, ordem))`)
-       .order('nome_categoria', { ascending: true });
+    try {
+        const { data: categorias, error } = await supabaseDash
+  .from('categorias')
+  .select(`id, nome_categoria, foto_capa, produtos(id, produto_imagens(url, ordem))`)
+  .order('nome_categoria', { ascending: true });
 
-            if (error) throw error;
+        if (error) throw error;
 
-            if (!categorias || categorias.length === 0) {
-                categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 40px;">
-                    <i class="fa-solid fa-folder-open" style="font-size: 3rem; margin-bottom: 15px; color: #334155;"></i>
-                    <p>Nenhuma categoria cadastrada ainda.</p>
-                    <p style="font-size: 0.85rem; margin-top: 8px;">Clique em "Nova Categoria" pra começar.</p>
-                </div>`;
-                totalProductsP.innerText = 0;
-                return;
+        if (!categorias || categorias.length === 0) {
+            categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 40px;">
+                <i class="fa-solid fa-folder-open" style="font-size: 3rem; margin-bottom: 15px; color: #334155;"></i>
+                <p>Nenhuma categoria cadastrada ainda.</p>
+                <p style="font-size: 0.85rem; margin-top: 8px;">Clique em "Nova Categoria" pra começar.</p>
+            </div>`;
+            totalProductsP.innerText = 0;
+            return;
+        }
+
+        categoriasGrid.innerHTML = "";
+        let totalItens = 0;
+
+        categorias.forEach(cat => {
+            const qtdProdutos = cat.produtos?.length || 0;
+            totalItens += qtdProdutos;
+
+            let fotoCapa = cat.foto_capa || 'https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Foto';
+            if (!cat.foto_capa && cat.produtos.length > 0) {
+                const primeiroProduto = cat.produtos[0];
+                if (primeiroProduto.produto_imagens && primeiroProduto.produto_imagens.length > 0) {
+                    const imgsOrdenadas = primeiroProduto.produto_imagens.sort((a,b) => a.ordem - b.ordem);
+                    if(imgsOrdenadas[0]?.url) fotoCapa = imgsOrdenadas[0].url;
+                }
             }
 
-            categoriasGrid.innerHTML = "";
-            let totalItens = 0;
-
-            categorias.forEach(cat => {
-                const qtdProdutos = cat.produtos?.length || 0;
-                totalItens += qtdProdutos;
-
-                fotoCapa = cat.foto_capa || 'https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Foto';
-                if (!cat.foto_capa && cat.produtos.length > 0) {
-                    const primeiroProduto = cat.produtos[0];
-                    if (primeiroProduto.produto_imagens && primeiroProduto.produto_imagens.length > 0) {
-                        const imgsOrdenadas = primeiroProduto.produto_imagens.sort((a,b) => a.ordem - b.ordem);
-                        if(imgsOrdenadas[0]?.url) fotoCapa = imgsOrdenadas[0].url;
-                    }
-                }
-
-                const card = document.createElement('div');
-                card.className = 'categoria-card';
-                card.style.position = 'relative';
-                card.innerHTML = `
-                    <button class="btn-edit-cat" onclick="event.stopPropagation(); openEditCatModal(${cat.id}, '${cat.nome_categoria}', '${cat.foto_capa || ''}')"
-                            style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.7); border:none; color:#deff9a; width:32px; height:32px; border-radius:8px; cursor:pointer; z-index:10;">
+            const card = document.createElement('div');
+            card.className = 'categoria-card';
+            card.style.position = 'relative';
+            card.innerHTML = `
+                <div style="position:absolute; top:8px; right:8px; display:flex; gap:6px; z-index:10;">
+                    <button class="btn-edit-cat" onclick="event.stopPropagation(); openEditCatModal(${cat.id}, '${cat.nome_categoria.replace(/'/g, "\\'")}', '${cat.foto_capa || ''}')"
+                            style="background:rgba(0,0,0,0.7); border:none; color:#deff9a; width:32px; height:32px; border-radius:8px; cursor:pointer;">
                         <i class="fa-solid fa-pen"></i>
                     </button>
-                    <img src="${fotoCapa}"
-                         class="categoria-img"
-                         alt="${cat.nome_categoria}"
-                         onerror="this.onerror=null; this.src='https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Foto'">
-                    <div class="categoria-info">
-                        <h3>${cat.nome_categoria}</h3>
-                        <p>${qtdProdutos} ${qtdProdutos === 1? 'produto' : 'produtos'}</p>
-                    </div>
-                `;
-                card.onclick = () => abrirCategoria(cat.id, cat.nome_categoria);
-                categoriasGrid.appendChild(card);
-            });
+                    <button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${cat.id})"
+                            style="background:rgba(0,0,0,0.7); border:none; color:#f87171; width:32px; height:32px; border-radius:8px; cursor:pointer;">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+                <img src="${fotoCapa}"
+                     class="categoria-img"
+                     alt="${cat.nome_categoria}"
+                     onerror="this.onerror=null; this.src='https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Foto'">
+                <div class="categoria-info">
+                    <h3>${cat.nome_categoria}</h3>
+                    <p>${qtdProdutos} ${qtdProdutos === 1? 'produto' : 'produtos'}</p>
+                </div>
+            `;
+            card.onclick = () => abrirCategoria(cat.id, cat.nome_categoria);
+            categoriasGrid.appendChild(card);
+        });
 
-            totalProductsP.innerText = totalItens;
-        } catch (err) {
-            console.error("Erro ao carregar categorias:", err);
-            categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #f87171; padding: 40px;">Erro ao carregar categorias.</div>`;
-        }
+        totalProductsP.innerText = totalItens;
+    } catch (err) {
+        console.error("Erro ao carregar categorias:", err);
+        categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #f87171; padding: 40px;">Erro ao carregar categorias.</div>`;
     }
-
+}
     async function abrirCategoria(id, nome) {
         categoriaAtualId = id;
         categoriaAtualNome = nome;
