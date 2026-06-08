@@ -831,8 +831,8 @@
 
         for (const file of files) {
             const nomeArq = `produtos/${produtoEditandoId}/${Date.now()}-${file.name}`;
-            await supabaseDash.storage.from('PRODUTOS').upload(nomeArq, file);
-            const { data } = supabaseDash.storage.from('PRODUTOS').getPublicUrl(nomeArq);
+           await supabaseDash.storage.from('FOTOS-PRODUTOS').upload(nomeArq, file);
+            const { data } = supabaseDash.storage.from('FOTOS-PRODUTOS').getPublicUrl(nomeArq);
 
             await supabaseDash.from('produto_imagens').insert({
                 produto_id: produtoEditandoId,
