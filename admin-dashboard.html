@@ -239,55 +239,7 @@
         </div>
     </div>
 
-     <div class="modal-overlay" id="editCategoryModal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2>Editar Categoria</h2>
-                <button class="btn-close-modal" id="closeEditCatModalX"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <form id="editCategoryForm">
-                <input type="hidden" id="editCatId">
-                <div class="form-group">
-                    <label>NOME DA CATEGORIA</label>
-                    <input type="text" id="editCatNome" required>
-                </div>
-                <div class="form-group">
-                    <label>FOTO DE CAPA DA CATEGORIA</label>
-                    <input type="file" id="editCatFotoCapa" accept="image/*">
-                    <div id="previewEditCatCapa" style="margin-top:10px;"></div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn-cancel" id="closeEditCatModalBtn">Cancelar</button>
-                    <button type="submit" class="btn-save" id="btnUpdateCategory">Atualizar Categoria</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="categoryModal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2>Criar Nova Categoria</h2>
-                <button class="btn-close-modal" id="closeCatModalX"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <form id="categoryForm">
-                <div class="form-group">
-                    <label>NOME DA CATEGORIA</label>
-                    <input type="text" id="catNome" placeholder="Ex: Tintas, Ferramentas, Pisos" required>
-                </div>
-                <div class="form-group">
-                    <label>FOTO DE CAPA DA CATEGORIA</label>
-                    <input type="file" id="catFotoCapa" accept="image/*">
-                    <div id="previewCatCapa" style="margin-top:10px;"></div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn-cancel" id="closeCatModalBtn">Cancelar</button>
-                    <button type="submit" class="btn-save" id="btnSaveCategory">Salvar Categoria</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+    
     <div class="modal-overlay" id="qrModal">
         <div class="modal-card" style="max-width: 400px; text-align: center;">
             <div class="modal-header">
@@ -394,73 +346,97 @@
         }
     }
         async function fetchCategoriasGrid() {
-        try {
-            const { data: categorias, error } = await supabaseDash
-     .from('categorias')
-     .select(`id, nome_categoria, foto_capa, produtos(id, produto_imagens(url, ordem))`)
-     .order('nome_categoria', { ascending: true });
+    try {
+        const { data: categorias, error } = await supabaseDash
+.from('categorias')
+.select(`
+     id, 
+     nome_categoria, 
+     produtos(id, created_at, produto_imagens(url, ordem))
+ `)
+.order('nome_categoria', { ascending: true });
 
-            if (error) throw error;
+        if (error) throw error;
 
-            if (!categorias || categorias.length === 0) {
-                categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 40px;">
-                    <i class="fa-solid fa-folder-open" style="font-size: 3rem; margin-bottom: 15px; color: #334155;"></i>
-                    <p>Nenhuma categoria cadastrada ainda.</p>
-                    <p style="font-size: 0.85rem; margin-top: 8px;">Clique em "Nova Categoria" pra começar.</p>
-                </div>`;
-                totalProductsP.innerText = 0;
-                return;
+        if (!categorias || categorias.length === 0) {
+            categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 40px;">
+                <i class="fa-solid fa-folder-open" style="font-size: 3rem; margin-bottom: 15px; color: #334155;"></i>
+                <p>Nenhuma categoria cadastrada ainda.</p>
+                <p style="font-size: 0.85rem; margin-top: 8px;">Clique em "Nova Categoria" pra começar.</p>
+            </div>`;
+            totalProductsP.innerText = 0;
+            return;
+        }
+
+        categoriasGrid.innerHTML = "";
+        let totalItens = 0;
+
+        categorias.forEach(cat => {
+            const qtdProdutos = cat.produtos?.length || 0;
+            totalItens += qtdProdutos;
+
+            // PEGA O ÚLTIMO PRODUTO ADICIONADO COMO CAPA
+            let fotoCapa = 'https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Produtos';
+            if (cat.produtos && cat.produtos.length > 0) {
+                // Ordena por data de criação e pega o mais recente
+                const ultimoProduto = cat.produtos.sort((a,b) => new Date(b.created_at) - new Date(a.created_at))[0];
+                if (ultimoProduto.produto_imagens && ultimoProduto.produto_imagens.length > 0) {
+                    const imgsOrdenadas = ultimoProduto.produto_imagens.sort((a,b) => a.ordem - b.ordem);
+                    if(imgsOrdenadas[0]?.url) fotoCapa = imgsOrdenadas[0].url;
+                }
             }
 
-            categoriasGrid.innerHTML = "";
-            let totalItens = 0;
+            const card = document.createElement('div');
+            card.className = 'categoria-card';
+            card.style.position = 'relative';
+            card.innerHTML = `
+                <div style="position:absolute; top:8px; right:8px; display:flex; gap:6px; z-index:10;">
+                    <button class="btn-action" onclick="event.stopPropagation(); editarNomeCategoria(${cat.id}, '${cat.nome_categoria.replace(/'/g, "\\'")}')"
+                            style="background:rgba(0,0,0,0.7); border:1px solid #334155; color:#deff9a; width:32px; height:32px; border-radius:8px; cursor:pointer;">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="btn-action btn-delete" onclick="event.stopPropagation(); deleteCategory(${cat.id})"
+                            style="background:rgba(0,0,0,0.7); border:1px solid #334155; color:#f8fafc; width:32px; height:32px; border-radius:8px; cursor:pointer;">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+                <img src="${fotoCapa}"
+                     class="categoria-img"
+                     alt="${cat.nome_categoria}"
+                     onerror="this.onerror=null; this.src='https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Foto'">
+                <div class="categoria-info">
+                    <h3>${cat.nome_categoria}</h3>
+                    <p>${qtdProdutos} ${qtdProdutos === 1? 'produto' : 'produtos'}</p>
+                </div>
+            `;
+            card.onclick = () => abrirCategoria(cat.id, cat.nome_categoria);
+            categoriasGrid.appendChild(card);
+        });
 
-            categorias.forEach(cat => {
-                const qtdProdutos = cat.produtos?.length || 0;
-                totalItens += qtdProdutos;
-
-                let fotoCapa = cat.foto_capa || 'https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Foto';
-                if (!cat.foto_capa && cat.produtos.length > 0) {
-                    const primeiroProduto = cat.produtos[0];
-                    if (primeiroProduto.produto_imagens && primeiroProduto.produto_imagens.length > 0) {
-                        const imgsOrdenadas = primeiroProduto.produto_imagens.sort((a,b) => a.ordem - b.ordem);
-                        if(imgsOrdenadas[0]?.url) fotoCapa = imgsOrdenadas[0].url;
-                    }
-                }
-
-                const card = document.createElement('div');
-                card.className = 'categoria-card';
-                card.style.position = 'relative';
-                card.innerHTML = `
-                    <div style="position:absolute; top:8px; right:8px; display:flex; gap:6px; z-index:10;">
-                        <button class="btn-edit-cat" onclick="event.stopPropagation(); openEditCatModal(${cat.id}, '${cat.nome_categoria.replace(/'/g, "\\'")}', '${cat.foto_capa || ''}')"
-                                style="background:rgba(0,0,0,0.7); border:none; color:#deff9a; width:32px; height:32px; border-radius:8px; cursor:pointer;">
-                            <i class="fa-solid fa-pen"></i>
-                        </button>
-                        <button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${cat.id})"
-                                style="background:rgba(0,0,0,0.7); border:none; color:#f87171; width:32px; height:32px; border-radius:8px; cursor:pointer;">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </div>
-                    <img src="${fotoCapa}"
-                         class="categoria-img"
-                         alt="${cat.nome_categoria}"
-                         onerror="this.onerror=null; this.src='https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Foto'">
-                    <div class="categoria-info">
-                        <h3>${cat.nome_categoria}</h3>
-                        <p>${qtdProdutos} ${qtdProdutos === 1? 'produto' : 'produtos'}</p>
-                    </div>
-                `;
-                card.onclick = () => abrirCategoria(cat.id, cat.nome_categoria);
-                categoriasGrid.appendChild(card);
-            });
-
-            totalProductsP.innerText = totalItens;
-        } catch (err) {
-            console.error("Erro ao carregar categorias:", err);
-            categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #f87171; padding: 40px;">Erro ao carregar categorias.</div>`;
-        }
+        totalProductsP.innerText = totalItens;
+    } catch (err) {
+        console.error("Erro ao carregar categorias:", err);
+        categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #f87171; padding: 40px;">Erro ao carregar categorias.</div>`;
     }
+}
+window.editarNomeCategoria = async function(id, nomeAtual) {
+    const novoNome = prompt('Digite o novo nome da categoria:', nomeAtual);
+    if (!novoNome || novoNome.trim() === '' || novoNome === nomeAtual) return;
+    
+    try {
+        const { error } = await supabaseDash
+           .from('categorias')
+           .update({ nome_categoria: novoNome.trim() })
+           .eq('id', id);
+            
+        if (error) throw error;
+        await fetchCategoriasGrid();
+        await fetchCategories();
+    } catch (err) {
+        alert("Erro ao atualizar: " + err.message);
+    }
+}
+
 
     // FUNÇÃO DELETAR CATEGORIA - AGORA EXISTE
     window.deleteCategory = async function(id) {
@@ -698,19 +674,7 @@
         }
     });
 
-    document.getElementById('catFotoCapa').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        const preview = document.getElementById('previewCatCapa');
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                preview.innerHTML = `<img src="${e.target.result}" style="width:100%; max-height:150px; object-fit:cover; border-radius:8px; border:1px solid #334155;">`;
-            };
-            reader.readAsDataURL(file);
-        } else {
-            preview.innerHTML = '';
-        }
-    });
+    // REMOVIDO: upload de foto de categoria - agora é automático
 
     categoryForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -718,20 +682,9 @@
         btnSaveCategory.disabled = true;
         try {
             const nomeCat = document.getElementById('catNome').value;
-            const fotoFile = document.getElementById('catFotoCapa').files[0];
-            let urlCapa = null;
-
-            if (fotoFile) {
-                const nomeArq = `categorias/${Date.now()}-${fotoFile.name}`;
-               const { error: uploadError } = await supabaseDash.storage.from('sp-catalogo').upload(nomeArq, fotoFile);
-               if (uploadError) throw uploadError;
-               const { data } = supabaseDash.storage.from('sp-catalogo').getPublicUrl(nomeArq);
-                urlCapa = data.publicUrl;
-            }
 
             const { error } = await supabaseDash.from('categorias').insert([{
-                nome_categoria: nomeCat,
-                foto_capa: urlCapa
+                nome_categoria: nomeCat
             }]);
 
             if (error) throw error;
@@ -750,7 +703,6 @@
     const fecharCatModal = () => {
         categoryModal.classList.remove('active');
         categoryForm.reset();
-        document.getElementById('previewCatCapa').innerHTML = '';
     };
     closeCatModalX.addEventListener('click', fecharCatModal);
     closeCatModalBtn.addEventListener('click', fecharCatModal);
@@ -840,11 +792,11 @@
         }
 
         const { data: existentes } = await supabaseDash
-    .from('produto_imagens')
-    .select('ordem')
-    .eq('produto_id', produtoEditandoId)
-    .order('ordem', { ascending: false })
-    .limit(1);
+   .from('produto_imagens')
+   .select('ordem')
+   .eq('produto_id', produtoEditandoId)
+   .order('ordem', { ascending: false })
+   .limit(1);
 
         let proximaOrdem = existentes?.length? existentes[0].ordem + 1 : 0;
 
@@ -909,73 +861,28 @@
             btn.disabled = false;
         }
     });
-    const editCategoryModal = document.getElementById('editCategoryModal');
-    const editCategoryForm = document.getElementById('editCategoryForm');
-    const closeEditCatModalX = document.getElementById('closeEditCatModalX');
-    const closeEditCatModalBtn = document.getElementById('closeEditCatModalBtn');
 
-    window.openEditCatModal = function(id, nome, fotoAtual) {
-        document.getElementById('editCatId').value = id;
-        document.getElementById('editCatNome').value = nome;
-        document.getElementById('previewEditCatCapa').innerHTML = fotoAtual?
-            `<img src="${fotoAtual}" style="width:100%; max-height:150px; object-fit:cover; border-radius:8px; border:1px solid #334155;">` : '';
-        editCategoryModal.classList.add('active');
-    }
-
-    document.getElementById('editCatFotoCapa').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        const preview = document.getElementById('previewEditCatCapa');
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                preview.innerHTML = `<img src="${e.target.result}" style="width:100%; max-height:150px; object-fit:cover; border-radius:8px; border:1px solid #334155;">`;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    editCategoryForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btnUpdateCategory');
-        btn.innerText = 'Atualizando...';
-        btn.disabled = true;
+    // REMOVIDO: Todo código de editCategoryModal - agora usa prompt simples
+    
+    // NOVA FUNÇÃO DE EDITAR NOME - SÓ ISSO
+    window.editarNomeCategoria = async function(id, nomeAtual) {
+        const novoNome = prompt('Digite o novo nome da categoria:', nomeAtual);
+        if (!novoNome || novoNome.trim() === '' || novoNome === nomeAtual) return;
+        
         try {
-            const id = parseInt(document.getElementById('editCatId').value);
-            const nomeCat = document.getElementById('editCatNome').value;
-            const fotoFile = document.getElementById('editCatFotoCapa').files[0];
-            let updateData = { nome_categoria: nomeCat };
-
-            if (fotoFile) {
-                const nomeArq = `categorias/${Date.now()}-${fotoFile.name}`;
-                const { error: uploadError } = await supabaseDash.storage.from('sp-catalogo').upload(nomeArq, fotoFile);
-                if (uploadError) throw uploadError;
-                const { data } = supabaseDash.storage.from('sp-catalogo').getPublicUrl(nomeArq);
-                updateData.foto_capa = data.publicUrl;
-            }
-
-            const { error } = await supabaseDash.from('categorias').update(updateData).eq('id', id);
+            const { error } = await supabaseDash
+              .from('categorias')
+              .update({ nome_categoria: novoNome.trim() })
+              .eq('id', id);
+                
             if (error) throw error;
-
-            alert("Categoria atualizada!");
-            editCategoryModal.classList.remove('active');
-            editCategoryForm.reset();
             await fetchCategoriasGrid();
             await fetchCategories();
         } catch (err) {
             alert("Erro ao atualizar: " + err.message);
-        } finally {
-            btn.innerText = 'Atualizar Categoria';
-            btn.disabled = false;
         }
-    });
+    }
 
-    const fecharEditCatModal = () => {
-        editCategoryModal.classList.remove('active');
-        editCategoryForm.reset();
-        document.getElementById('previewEditCatCapa').innerHTML = '';
-    };
-    closeEditCatModalX.addEventListener('click', fecharEditCatModal);
-    closeEditCatModalBtn.addEventListener('click', fecharEditCatModal);
     document.addEventListener('DOMContentLoaded', checkUserSession);
 </script>
 </body>
