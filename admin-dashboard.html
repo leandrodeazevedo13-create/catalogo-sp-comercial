@@ -435,10 +435,11 @@
         }
     }
     window.editarNomeCategoria = async function(id, nomeAtual) {
-        const novoNome = prompt('Digite o novo nome da categoria:', nomeAtual);
-        if (!novoNome || novoNome.trim() === '' || novoNome === nomeAtual) return;
-
-        try        const { error } = await supabaseDash
+    const novoNome = prompt('Digite o novo nome da categoria:', nomeAtual);
+    if (!novoNome || novoNome.trim() === '' || novoNome === nomeAtual) return;
+    
+    try {
+        const { error } = await supabaseDash
           .from('categorias')
           .update({ nome_categoria: novoNome.trim() })
           .eq('id', id);
@@ -450,6 +451,7 @@
         alert("Erro ao atualizar: " + err.message);
     }
 }
+
 
     window.deleteCategory = async function(id) {
         if (!confirm("Tem certeza? Isso vai apagar TODOS os produtos dessa categoria também!")) return;
@@ -874,7 +876,7 @@
             btn.disabled = false;
         }
     });
-    
+
 
     document.addEventListener('DOMContentLoaded', checkUserSession);
 </script>
