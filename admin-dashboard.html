@@ -362,96 +362,80 @@
             console.error("Erro ao listar categorias:", err.message);
         }
     }
-    async function fetchCategoriasGrid() {
-        try {
-            const { data: categorias, error } = await supabaseDash
+   async function fetchCategoriasGrid() {
+    try {
+        const { data: categorias, error } = await supabaseDash
 .from('categorias')
 .select(`
      id,
      nome_categoria,
-     produtos(id, created_at, produto_imagens(url, ordem))
+     produtos(id, produto_imagens(url, ordem))
  `)
 .order('nome_categoria', { ascending: true });
 
-            if (error) throw error;
+        if (error) throw error;
 
-            if (!categorias || categorias.length === 0) {
-                categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 40px;">
-                    <i class="fa-solid fa-folder-open" style="font-size: 3rem; margin-bottom: 15px; color: #334155;"></i>
-                    <p>Nenhuma categoria cadastrada ainda.</p>
-                    <p style="font-size: 0.85rem; margin-top: 8px;">Clique em "Nova Categoria" pra começar.</p>
-                </div>`;
-                totalProductsP.innerText = 0;
-                return;
+        if (!categorias || categorias.length === 0) {
+            categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 40px;">
+                <i class="fa-solid fa-folder-open" style="font-size: 3rem; margin-bottom: 15px; color: #334155;"></i>
+                <p>Nenhuma categoria cadastrada ainda.</p>
+                <p style="font-size: 0.85rem; margin-top: 8px;">Clique em "Nova Categoria" pra começar.</p>
+            </div>`;
+            totalProductsP.innerText = 0;
+            return;
+        }
+
+        categoriasGrid.innerHTML = "";
+        let totalItens = 0;
+
+        categorias.forEach(cat => {
+            const qtdProdutos = cat.produtos?.length || 0;
+            totalItens += qtdProdutos;
+
+            // PEGA O PRODUTO COM MAIOR ID COMO CAPA - MAIS RECENTE
+            let fotoCapa = 'https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Produtos';
+            if (cat.produtos && cat.produtos.length > 0) {
+                // Pega o produto com maior ID = último adicionado
+                const ultimoProduto = cat.produtos.sort((a,b) => b.id - a.id)[0];
+                if (ultimoProduto.produto_imagens && ultimoProduto.produto_imagens.length > 0) {
+                    const imgsOrdenadas = ultimoProduto.produto_imagens.sort((a,b) => a.ordem - b.ordem);
+                    if(imgsOrdenadas[0]?.url) fotoCapa = imgsOrdenadas[0].url;
+                }
             }
 
-            categoriasGrid.innerHTML = "";
-            let totalItens = 0;
+            const card = document.createElement('div');
+            card.className = 'categoria-card';
+            card.style.position = 'relative';
+            card.innerHTML = `
+                <div style="position:absolute; top:8px; right:8px; display:flex; gap:6px; z-index:10;">
+                    <button class="btn-action" onclick="event.stopPropagation(); editarNomeCategoria(${cat.id}, '${cat.nome_categoria.replace(/'/g, "\\'")}')"
+                            style="background:rgba(0,0,0,0.7); border:1px solid #334155; color:#deff9a; width:32px; height:32px; border-radius:8px; cursor:pointer;">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="btn-action btn-delete" onclick="event.stopPropagation(); deleteCategory(${cat.id})"
+                            style="background:rgba(0,0,0,0.7); border:1px solid #334155; color:#f8fafc; width:32px; height:32px; border-radius:8px; cursor:pointer;">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+                <img src="${fotoCapa}"
+                     class="categoria-img"
+                     alt="${cat.nome_categoria}"
+                     onerror="this.onerror=null; this.src='https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Foto'">
+                <div class="categoria-info">
+                    <h3>${cat.nome_categoria}</h3>
+                    <p>${qtdProdutos} ${qtdProdutos === 1? 'produto' : 'produtos'}</p>
+                </div>
+            `;
+            card.onclick = () => abrirCategoria(cat.id, cat.nome_categoria);
+            categoriasGrid.appendChild(card);
+        });
 
-            categorias.forEach(cat => {
-                const qtdProdutos = cat.produtos?.length || 0;
-                totalItens += qtdProdutos;
-
-                let fotoCapa = 'https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Produtos';
-                if (cat.produtos && cat.produtos.length > 0) {
-                    const ultimoProduto = cat.produtos.sort((a,b) => new Date(b.created_at) - new Date(a.created_at))[0];
-                    if (ultimoProduto.produto_imagens && ultimoProduto.produto_imagens.length > 0) {
-                        const imgsOrdenadas = ultimoProduto.produto_imagens.sort((a,b) => a.ordem - b.ordem);
-                        if(imgsOrdenadas[0]?.url) fotoCapa = imgsOrdenadas[0].url;
-                    }
-                }
-
-                const card = document.createElement('div');
-                card.className = 'categoria-card';
-                card.style.position = 'relative';
-                card.innerHTML = `
-                    <div style="position:absolute; top:8px; right:8px; display:flex; gap:6px; z-index:10;">
-                        <button class="btn-action" onclick="event.stopPropagation(); editarNomeCategoria(${cat.id}, '${cat.nome_categoria.replace(/'/g, "\\'")}')"
-                                style="background:rgba(0,0,0,0.7); border:1px solid #334155; color:#deff9a; width:32px; height:32px; border-radius:8px; cursor:pointer;">
-                            <i class="fa-solid fa-pen"></i>
-                        </button>
-                        <button class="btn-action btn-delete" onclick="event.stopPropagation(); deleteCategory(${cat.id})"
-                                style="background:rgba(0,0,0,0.7); border:1px solid #334155; color:#f8fafc; width:32px; height:32px; border-radius:8px; cursor:pointer;">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </div>
-                    <img src="${fotoCapa}"
-                         class="categoria-img"
-                         alt="${cat.nome_categoria}"
-                         onerror="this.onerror=null; this.src='https://placehold.co/200x140/1e293b/94a3b8?text=Sem+Foto'">
-                    <div class="categoria-info">
-                        <h3>${cat.nome_categoria}</h3>
-                        <p>${qtdProdutos} ${qtdProdutos === 1? 'produto' : 'produtos'}</p>
-                    </div>
-                `;
-                card.onclick = () => abrirCategoria(cat.id, cat.nome_categoria);
-                categoriasGrid.appendChild(card);
-            });
-
-            totalProductsP.innerText = totalItens;
-        } catch (err) {
-            console.error("Erro ao carregar categorias:", err);
-            categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #f87171; padding: 40px;">Erro ao carregar categorias.</div>`;
-        }
-    }
-    window.editarNomeCategoria = async function(id, nomeAtual) {
-    const novoNome = prompt('Digite o novo nome da categoria:', nomeAtual);
-    if (!novoNome || novoNome.trim() === '' || novoNome === nomeAtual) return;
-    
-    try {
-        const { error } = await supabaseDash
-          .from('categorias')
-          .update({ nome_categoria: novoNome.trim() })
-          .eq('id', id);
-
-        if (error) throw error;
-        await fetchCategoriasGrid();
-        await fetchCategories();
+        totalProductsP.innerText = totalItens;
     } catch (err) {
-        alert("Erro ao atualizar: " + err.message);
+        console.error("Erro ao carregar categorias:", err);
+        categoriasGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #f87171; padding: 40px;">Erro ao carregar categorias.</div>`;
     }
 }
-
 
     window.deleteCategory = async function(id) {
         if (!confirm("Tem certeza? Isso vai apagar TODOS os produtos dessa categoria também!")) return;
