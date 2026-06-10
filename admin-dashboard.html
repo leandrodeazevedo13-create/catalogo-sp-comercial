@@ -239,7 +239,7 @@
         </div>
     </div>
 
-    
+
     <div class="modal-overlay" id="qrModal">
         <div class="modal-card" style="max-width: 400px; text-align: center;">
             <div class="modal-header">
@@ -675,7 +675,7 @@ window.editarNomeCategoria = async function(id, nomeAtual) {
     });
 
     // REMOVIDO: upload de foto de categoria - agora é automático
-
+if (categoryForm) {
     categoryForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         btnSaveCategory.innerText = "Salvando...";
@@ -699,11 +699,13 @@ window.editarNomeCategoria = async function(id, nomeAtual) {
             btnSaveCategory.disabled = false;
         }
     });
+} // FECHA O IF DO categoryForm
 
-    const fecharCatModal = () => {
-        categoryModal.classList.remove('active');
-        categoryForm.reset();
-    };
+const fecharCatModal = () => {
+    categoryModal.classList.remove('active');
+    categoryForm.reset();
+};
+
     closeCatModalX.addEventListener('click', fecharCatModal);
     closeCatModalBtn.addEventListener('click', fecharCatModal);
     openCategoryModalBtn.addEventListener('click', () => categoryModal.classList.add('active'));
